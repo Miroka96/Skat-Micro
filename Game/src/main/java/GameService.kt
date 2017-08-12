@@ -10,8 +10,8 @@ import io.vertx.ext.sql.SQLConnection
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
-import model.RequestObject
 import model.User
+import service.RequestObject
 
 
 class GameService : AbstractVerticle() {
