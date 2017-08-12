@@ -1,6 +1,4 @@
-package model
-
-import model.database.UserData
+package model.user
 
 class User {
     var data: UserData

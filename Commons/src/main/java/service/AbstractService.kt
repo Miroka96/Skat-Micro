@@ -12,7 +12,7 @@ import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 
 
-open class AbstractService : AbstractVerticle() {
+abstract class AbstractService : AbstractVerticle() {
     val conf: JsonObject by lazy {
         config()
     }
@@ -25,7 +25,7 @@ open class AbstractService : AbstractVerticle() {
         Router.router(vertx)
     }
 
-    override fun start(fut: Future<Void>) {
+    final override fun start(fut: Future<Void>) {
         router.route("/").handler(BodyHandler.create()) //This is really important if you use routing
         // -> read documentation. If not used the body wont be passed
 
@@ -48,23 +48,21 @@ open class AbstractService : AbstractVerticle() {
                         fut.fail(result.cause())
                     }
                 }
-
     }
 
-    open fun addRouting(router: Router) {
-        router.get("/").handler(wrapHandler(AbstractRequestHandler()))
+    final override fun stop() {
+        jdbc.close()
+        customStop()
     }
+
+    abstract fun addRouting(router: Router)
+    //router.get("/").handler(wrapHandler(AbstractRequestHandler()))
 
     open fun customStart() {}
     open fun customStop() {}
 
 
-    override fun stop() {
-        jdbc.close()
-        customStop()
-    }
-
-    private fun wrapHandler(requestHandler: AbstractRequestHandler) = Handler<RoutingContext>
+    fun wrapHandler(requestHandler: AbstractRequestHandler) = Handler<RoutingContext>
     { routingContext: RoutingContext ->
         //TODO fill all needed arguments
         createSQLConnection(requestHandler,
@@ -73,7 +71,10 @@ open class AbstractService : AbstractVerticle() {
     }
 
 
-    private fun createSQLConnection(requestHandler: AbstractRequestHandler, next: Handler<RequestObject>): Handler<RequestObject> {
+    private fun createSQLConnection(
+            requestHandler: AbstractRequestHandler,
+            next: Handler<RequestObject>
+    ): Handler<RequestObject> {
         if (!requestHandler.needsDatabaseConnection) return next
 
         return Handler<RequestObject> { request: RequestObject ->

@@ -1,4 +1,4 @@
-package model.database
+package model.user
 
 open class LoginUserData {
     var username: String? = null
@@ -19,7 +19,6 @@ open class LoggedInUserData : LoginUserData {
     var id: Int? = null
 
     constructor()
-
     constructor(
             username: String,
             password: String,
@@ -32,7 +31,6 @@ open class LoggedInUserData : LoginUserData {
 class UserData : LoggedInUserData {
 
     constructor()
-
     constructor(
             username: String,
             password: String,

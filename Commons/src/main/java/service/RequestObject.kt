@@ -3,7 +3,7 @@ package service
 import io.vertx.ext.jdbc.JDBCClient
 import io.vertx.ext.sql.SQLConnection
 import io.vertx.ext.web.RoutingContext
-import model.User
+import model.user.User
 
 class RequestObject(
         val jdbc: JDBCClient,

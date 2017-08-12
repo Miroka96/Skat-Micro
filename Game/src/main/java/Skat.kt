@@ -1,6 +1,6 @@
 package skat
 
-import skat.cards.Cardset
+import model.cards.Cardset
 import java.util.*
 
 /*Multithreading und Reflection sind für die KIs verboten

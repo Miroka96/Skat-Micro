@@ -1,21 +1,19 @@
 package skat
 
-import skat.cards.Card
-import skat.cards.CardColour
-import skat.cards.Cardset
+import model.cards.Card
+import model.cards.CardColour
 import skat.history.Draw
 import skat.history.GameHistory
 import skat.history.Gamemode
 import skat.history.Round
-import skat.player.Server
 import skat.player.Serverside
 import skat.state.GameStatus
 import skat.state.Playerstat
 import java.util.*
 
 class Game(val port: Int, val publicGameIndex: Int) {
-    val server = Server(port)
-    val cards = Cardset(Cardset.randomCardArray())
+
+    val cards = cards.Cardset(cards.Cardset.randomCardArray())
     val players = ArrayList<Serverside>(3)
     val playerStats = arrayOf<Playerstat>(
             Playerstat(cards.getPlayerCards(0)),

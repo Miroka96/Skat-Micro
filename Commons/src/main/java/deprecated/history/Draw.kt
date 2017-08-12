@@ -1,6 +1,6 @@
 package skat.history
 
-import skat.cards.Card
+import model.cards.Card
 
 class Draw {
     val type: Draw?

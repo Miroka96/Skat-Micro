@@ -1,7 +1,7 @@
 package skat.history
 
-import skat.cards.Card
-import skat.cards.Cardset
+import model.cards.Card
+import model.cards.Cardset
 
 class Gamemode {
     val mode: Gamemode?
@@ -123,23 +123,7 @@ class Gamemode {
 
     }
 
-    fun setSchneider() {
-        isSchneider = true
-    }
 
-    fun setSchwarz() {
-        this.isSchwarz = true
-        setSchneider()
-    }
-
-    fun setOuvert() {
-        this.isOuvert = true
-        if (mode != nullspiel) setSchwarz()
-    }
-
-    fun setHand() {
-        this.isHand = true
-    }
 
     companion object {
         val kreuz: Gamemode = Gamemode()
@@ -149,7 +133,5 @@ class Gamemode {
         val nullspiel = Gamemode()
         val grand = Gamemode()
         val ramsch = Gamemode()
-
-        val modeArray = arrayOf(karo, herz, pik, kreuz, nullspiel, grand, ramsch)
     }
 }

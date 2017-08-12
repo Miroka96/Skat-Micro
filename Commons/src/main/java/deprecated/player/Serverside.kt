@@ -1,7 +1,7 @@
 package skat.player
 
-import skat.cards.CardColour
-import skat.cards.Cardset
+import model.cards.CardColour
+import model.cards.Cardset
 import skat.history.Draw
 import skat.history.Gamemode
 import skat.state.GameStatus
