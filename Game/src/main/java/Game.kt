@@ -2,27 +2,21 @@ package skat
 
 import model.cards.Card
 import model.cards.CardColour
+import model.cards.CardsetGenerator
+import model.game.AbstractMode
+import model.game.GameData
 import skat.history.Draw
-import skat.history.GameHistory
 import skat.history.Gamemode
 import skat.history.Round
 import skat.player.Serverside
-import skat.state.GameStatus
-import skat.state.Playerstat
 import java.util.*
 
-class Game(val port: Int, val publicGameIndex: Int) {
+class Game(var gameData: GameData) {
 
-    val cards = cards.Cardset(cards.Cardset.randomCardArray())
-    val players = ArrayList<Serverside>(3)
-    val playerStats = arrayOf<Playerstat>(
-            Playerstat(cards.getPlayerCards(0)),
-            Playerstat(cards.getPlayerCards(1)),
-            Playerstat(cards.getPlayerCards(2)))
-    val history = GameHistory(this)
-    var recentReizwert = 0
-    var recentPlayer = 0
-    var gameStatus: GameStatus = GameStatus.notStarted
+    constructor() : this(GameData(CardsetGenerator().generateShuffledCardset()))
+
+
+    var gameMode: AbstractMode = AbstractMode.NOT_STARTED
     var singlePlayer = -1
     var ansager = 2     //sagen
     var zuhoerer = 1    //hören
@@ -35,8 +29,8 @@ class Game(val port: Int, val publicGameIndex: Int) {
 
     fun readyForStart() = (3 <= server.clients.size)
     fun startGame() {
-        if (gameStatus !== GameStatus.notStarted || !readyForStart()) return
-        gameStatus = GameStatus.reizen
+        if (gameMode !== AbstractMode.NOT_STARTED || !readyForStart()) return
+        gameMode = AbstractMode.AUCTION
         for (i in 0..2) players.add(Serverside(server.pullClient(), this, i))
         players[recentPlayer].turnNotification()
     }
