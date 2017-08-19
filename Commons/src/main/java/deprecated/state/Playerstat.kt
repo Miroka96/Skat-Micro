@@ -1,6 +1,6 @@
 package skat.state
 
-import model.cards.Card
+import cards.model.Card
 import java.util.*
 
 class Playerstat(val handkarten: ArrayList<Card>) {

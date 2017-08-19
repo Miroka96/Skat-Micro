@@ -1,7 +1,7 @@
 package handler
 
 import service.AbstractRequestHandler
-import service.RequestObject
+import service.model.RequestObject
 
 class JoinGameHandler : AbstractRequestHandler() {
     override fun handleRequest(requestObject: RequestObject) {

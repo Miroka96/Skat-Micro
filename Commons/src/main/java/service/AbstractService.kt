@@ -10,6 +10,7 @@ import io.vertx.ext.sql.SQLConnection
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
+import service.model.RequestObject
 
 
 abstract class AbstractService : AbstractVerticle() {
@@ -65,9 +66,12 @@ abstract class AbstractService : AbstractVerticle() {
     fun wrapHandler(requestHandler: AbstractRequestHandler) = Handler<RoutingContext>
     { routingContext: RoutingContext ->
         //TODO fill all needed arguments
+        var request = RequestObject(jdbc, requestHandler)
+        request.routingContext = routingContext
+
         createSQLConnection(requestHandler,
                 handleRequestObject()
-        ).handle(RequestObject(jdbc, requestHandler, routingContext))
+        ).handle(request)
     }
 
 

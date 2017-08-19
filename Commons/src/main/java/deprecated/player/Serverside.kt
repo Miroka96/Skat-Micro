@@ -1,8 +1,7 @@
 package skat.player
 
-import model.cards.CardColour
-import model.cards.Cardset
-import model.game.AbstractMode
+import cards.model.CardColour
+import cards.model.Cardset
 import skat.history.Draw
 import skat.history.Gamemode
 import java.net.Socket
@@ -126,12 +125,12 @@ class Serverside(private val client: Socket, private val game: Game, val ownPlay
     fun recentPlayer() = game.recentPlayer
     fun isRecentPlayer() = (ownPlayerIndex == recentPlayer())
 
-    fun gameStarted() = !(game.gameStatus == AbstractMode.NOT_STARTED)
-    fun gameFinished() = (game.gameStatus == AbstractMode.FINISHED)
-    fun reizphase() = (game.gameStatus == AbstractMode.AUCTION)
-    fun openingphase() = (game.gameStatus == AbstractMode.DECLARING)
-    fun spielphase() = (game.gameStatus == AbstractMode.SUIT_GAME)
-    fun gamestatus() = AbstractMode.stateArray.indexOf(game.gameStatus)
+    fun gameStarted() = !(game.gameStatus == game.mode.AbstractMode.NOT_STARTED)
+    fun gameFinished() = (game.gameStatus == game.mode.AbstractMode.FINISHED)
+    fun reizphase() = (game.gameStatus == game.mode.AbstractMode.AUCTION)
+    fun openingphase() = (game.gameStatus == game.mode.AbstractMode.DECLARING)
+    fun spielphase() = (game.gameStatus == game.mode.AbstractMode.SUIT_GAME)
+    fun gamestatus() = game.mode.AbstractMode.stateArray.indexOf(game.gameStatus)
     fun gamemode() = Gamemode.modeArray.indexOf(game.gamemode)
 
     fun ansager() = game.ansager

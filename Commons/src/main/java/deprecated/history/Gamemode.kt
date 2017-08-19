@@ -1,7 +1,7 @@
 package skat.history
 
-import model.cards.Card
-import model.cards.Cardset
+import cards.model.Card
+import cards.model.Cardset
 
 class Gamemode {
     val mode: Gamemode?

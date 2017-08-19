@@ -1,7 +1,7 @@
 package handler
 
 import service.AbstractRequestHandler
-import service.RequestObject
+import service.model.RequestObject
 
 class CreateGameHandler : AbstractRequestHandler() {
     override fun handleRequest(requestObject: RequestObject) {
