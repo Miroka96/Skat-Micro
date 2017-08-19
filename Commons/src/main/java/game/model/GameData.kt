@@ -13,4 +13,7 @@ data class GameData(
 
     var mode = 0
 
+    var gameValue = 0
+    var latestBid = -1
+    var latestPlayer = -1
 }
