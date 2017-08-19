@@ -17,6 +17,13 @@ enum class GameMode(val mode: AbstractMode, val id: Int) {
 
     companion object {
         private val map = GameMode.values().associateBy(GameMode::id)
-        fun fromId(id: Int) = map[id]
+        fun fromId(id: Int): GameMode {
+            var mode = map[id]
+            if (mode != null) {
+                return mode
+            } else {
+                return NOT_STARTED
+            }
+        }
     }
 }
