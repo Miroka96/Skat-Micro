@@ -1,6 +1,6 @@
 package model.game
 
-data class Player(var userID: Int) {
+data class PlayerData(var userID: Int) {
     var trickCount = 0
     var score = 0
 
