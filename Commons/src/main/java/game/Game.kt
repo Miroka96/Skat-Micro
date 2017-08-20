@@ -1,11 +1,10 @@
 package game
 
-import cards.CardsetGenerator
 import game.model.GameData
 import player.Player
 
 class Game(var gameData: GameData) {
-    constructor() : this(GameData(CardsetGenerator().generateShuffledCardset()))
+    constructor() : this(GameData())
 
 
     var gameMode = GameMode.fromId(gameData.mode)
