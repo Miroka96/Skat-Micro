@@ -14,7 +14,7 @@ class GameDataTest {
 
     @org.junit.Test
     fun toJson() {
-        var gameData = GameData()
+        //var gameData = GameData()
 
         val mapper = jacksonObjectMapper()
         val writer = mapper.writerWithDefaultPrettyPrinter()
