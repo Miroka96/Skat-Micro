@@ -7,33 +7,39 @@ import org.jboss.arquillian.junit.Arquillian
 import org.jboss.shrinkwrap.api.ShrinkWrap
 import org.jboss.shrinkwrap.api.asset.EmptyAsset
 import org.jboss.shrinkwrap.api.spec.JavaArchive
+import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.test.assertEquals
 
 @RunWith(Arquillian::class)
 class GameDataTest {
 
-    @org.junit.Test
-    fun toJson() {
-        //var gameData = GameData()
+    val jsonMapper = jacksonObjectMapper()
 
-        val mapper = jacksonObjectMapper()
-        val writer = mapper.writerWithDefaultPrettyPrinter()
+    @Test
+    fun dataClassToJson() {
+        val data: Data1 = Data1(1, "Foo", "Bar")
+        val json = "{\"id\":1,\"first\":\"Foo\",\"last\":\"Bar\"}"
 
-        val json1 = writer.writeValueAsString(Data1(1, "Foo", "Bar"))
-        val data1_1 = mapper.readValue(json1, Data1::class.java)
-        val data2_1 = mapper.readValue(json1, Data2::class.java)
+        val json1: String = jsonMapper.writeValueAsString(data)
+        val data1: Data1 = jsonMapper.readValue(json1, Data1::class.java)
+        val data2: Data2 = jsonMapper.readValue(json1, Data2::class.java)
+
+        val data1_json: String = jsonMapper.writeValueAsString(data1)
+        val data2_json: String = jsonMapper.writeValueAsString(data2)
+
+        /*
+        println(data)
         println(json1)
-        println()
-        println(data1_1)
-        println(data2_1)
-        println()
-        val json2 = writer.writeValueAsString(Data2(1, "Baz", "Qux"))
-        val data1_2 = mapper.readValue(json2, Data1::class.java)
-        val data2_2 = mapper.readValue(json2, Data2::class.java)
-        println(json2)
-        println()
-        println(data1_2)
-        println(data2_2)
+        println(data1)
+        println(data2)
+        println(data1_json)
+        println(data2_json)
+        */
+
+        assertEquals(json, json1)
+        assertEquals(json, data1_json)
+        assertEquals(json, data2_json)
     }
 
     companion object {
@@ -46,12 +52,11 @@ class GameDataTest {
         }
     }
 
+    data class Data1(val id: Int,
+                     val first: String,
+                     val last: String)
+
+    data class Data2(@JsonProperty("id") val a: Int,
+                     @JsonProperty("first") val b: String,
+                     @JsonProperty("last") val c: String)
 }
-
-data class Data1(val id: Int,
-                 val first: String,
-                 val last: String)
-
-data class Data2(@JsonProperty("id") val a: Int,
-                 @JsonProperty("first") val b: String,
-                 @JsonProperty("last") val c: String)
