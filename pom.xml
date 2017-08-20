@@ -18,7 +18,7 @@
         <kotlin.version>1.1.4</kotlin.version>
         <vertx.version>3.4.2</vertx.version>
         <skat.version>1.0-SNAPSHOT</skat.version>
-
+        <jackson.version>2.9.0</jackson.version>
     </properties>
 
     <dependencies>
@@ -73,6 +73,32 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Jackson https://stackoverflow.com/questions/36293570/kotlin-data-class-to-json-with-spring-jackson -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
