@@ -15,7 +15,7 @@
     </modules>
 
     <properties>
-        <kotlin.version>1.1.4</kotlin.version>
+        <kotlin.version>1.1.4-2</kotlin.version>
         <vertx.version>3.4.2</vertx.version>
         <skat.version>1.0-SNAPSHOT</skat.version>
         <jackson.version>2.9.0</jackson.version>
