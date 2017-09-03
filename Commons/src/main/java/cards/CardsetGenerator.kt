@@ -27,9 +27,9 @@ class CardsetGenerator {
 
     fun generateCardset(initialCardOrder: Array<Card>): Cardset {
         var hands = Array<Hand>(3) { player ->
-            Hand(initialCardOrder.copyOfRange(player * 10, player * 10 + 9))
+            Hand(initialCardOrder.copyOfRange(player * 10, (player + 1) * 10))
         }
-        var skat = initialCardOrder.copyOfRange(30, 31)
+        var skat = initialCardOrder.copyOfRange(30, 32)
         return Cardset(hands, skat)
     }
 

@@ -17,6 +17,15 @@ class GameDataTest {
     val jsonMapper = jacksonObjectMapper()
 
     @Test
+    fun gameDataToJson() {
+        val data = GameData()
+        var dataJson = jsonMapper.writeValueAsString(data)
+        var dataRead = jsonMapper.readValue(dataJson, GameData::class.java)
+        var dataReadJson = jsonMapper.writeValueAsString(dataRead)
+        assertEquals(dataJson, dataReadJson)
+    }
+
+    @Test
     fun dataClassToJson() {
         val data: Data1 = Data1(1, "Foo", "Bar")
         val json = "{\"id\":1,\"first\":\"Foo\",\"last\":\"Bar\"}"

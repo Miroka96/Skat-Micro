@@ -1,8 +1,10 @@
 package player
 
+import player.model.IPlayerData
 import player.model.PlayerData
 
-class Player(var playerData: PlayerData) {
+class Player(var playerData: PlayerData) : IPlayerData by playerData {
     constructor() : this(PlayerData())
+
 
 }
