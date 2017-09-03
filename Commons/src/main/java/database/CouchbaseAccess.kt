@@ -7,17 +7,23 @@ import com.couchbase.client.java.CouchbaseAsyncCluster
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment
-import com.couchbase.client.java.error.DocumentDoesNotExistException
 import com.couchbase.client.java.util.retry.RetryBuilder
 import io.vertx.core.Future
+import io.vertx.core.json.JsonArray
 import rx.Observable
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 
-class CouchbaseAccess(var seedNodes: List<String>, var bucketName: String, var bucketPassword: String) : DatabaseAccess() {
+class CouchbaseAccess(
+        var seedNodes: List<String>,
+        var bucketName: String,
+        var bucketPassword: String
+) : DatabaseAccess() {
 
     private var cluster: CouchbaseAsyncCluster
     @Volatile private var bucket: AsyncBucket? = null
+    @Volatile private var creationObservable: Observable<AsyncBucket>? = null
 
 
     init {
@@ -38,6 +44,14 @@ class CouchbaseAccess(var seedNodes: List<String>, var bucketName: String, var b
 
     constructor() : this("localhost")
 
+    constructor(config: io.vertx.core.json.JsonObject) : this(
+            jsonArrayToStringList(config.getJsonArray("couchbase.seeds", JsonArray().add("localhost"))),
+            config.getString("couchbase.bucket", "default"),
+            config.getString("couchbase.password", "")
+    )
+
+
+
     private fun createBucket(): Observable<AsyncBucket> {
         return cluster.openBucket()
                 .last()
@@ -52,11 +66,11 @@ class CouchbaseAccess(var seedNodes: List<String>, var bucketName: String, var b
                                 .build())
     }
 
-    fun close(stopFuture: Future<Void>) {
+    fun close(stopFuture: Future<Void>, shutdownAll: Boolean = false) {
         cluster.disconnect()
                 .last()
                 .doOnCompleted {
-                    environment.shutdownAsync()
+                    if (shutdownAll) environment.shutdownAsync()
                     stopFuture.complete()
                 }
                 .doOnError {
@@ -65,13 +79,28 @@ class CouchbaseAccess(var seedNodes: List<String>, var bucketName: String, var b
                 .onErrorReturn { false }
     }
 
+    fun closeBlocking(shutdownAll: Boolean = false) {
+        var latch = CountDownLatch(1)
+        var future = Future.future<Void> { it: Future<Void> ->
+            latch.countDown()
+        }
+        close(future, shutdownAll)
+        latch.await()
+    }
+
     fun checkBucket(): Observable<AsyncBucket> {
         if (bucket == null || bucket!!.isClosed) {
-            return createBucket()
+            // catch further calls during creation
+            if (creationObservable != null) return creationObservable!!
+            var creation = createBucket()
                     .doOnError { it ->
-                        it.printStackTrace()
-                        println("Could not open Bucket.")
+                        println("Could not open Bucket ${joinToString(seedNodes, ",")}:$bucketName")
                     }
+                    .doOnCompleted {
+                        creationObservable = null
+                    }
+            creationObservable = creation
+            return creation
         } else {
             return Observable.just(bucket!!)
         }
@@ -80,11 +109,7 @@ class CouchbaseAccess(var seedNodes: List<String>, var bucketName: String, var b
     override fun readJson(key: String): Observable<JsonDocument> {
         return checkBucket()
                 .flatMap { it -> it.get(key) }
-                .doOnError { it ->
-                    it.printStackTrace()
-                    println("Key not found")
-                }
-                .onErrorReturn { JsonDocument.create("couldNotRead") }
+                .doOnError { println("Key '$key' not found") }
     }
 
 
@@ -105,29 +130,12 @@ class CouchbaseAccess(var seedNodes: List<String>, var bucketName: String, var b
                     it.printStackTrace()
                     println("Could not write Content")
                 }
-                .onErrorReturn { JsonDocument.create("couldNotWrite") }
     }
 
     override fun deleteKey(key: String): Observable<JsonDocument> {
         return checkBucket()
-                .flatMap {
-                    it.remove(key).onErrorReturn { ex: Throwable ->
-                        var msg = ""
-                        if (ex is DocumentDoesNotExistException) {
-                            msg = "DocumentDoesNotExistException"
-                        } else {
-                            ex.printStackTrace()
-                            if (ex.message != null)
-                                msg = ex.message!!
-                            else {
-                                msg = "UnknownException"
-                            }
-                        }
-                        return@onErrorReturn JsonDocument.create("null")
-                    }
-
-                }
-
+                .flatMap { it.remove(key) }
+                .doOnError { println("Could not delete $key") }
     }
 
     companion object {
