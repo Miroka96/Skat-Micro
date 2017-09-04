@@ -140,7 +140,7 @@ class CouchbaseAccess(
                 .doOnError { println("Could not delete $key") }
     }
 
-    var jsonmapper = jacksonObjectMapper()
+
 
     fun gameDataFrom(json: String) = jsonmapper.readValue(json, GameData::class.java)
     fun gameDataFrom(obj: JsonObject) = gameDataFrom(obj.toString())
@@ -154,5 +154,6 @@ class CouchbaseAccess(
                 .build()
             private set
 
+        var jsonmapper = jacksonObjectMapper()
     }
 }

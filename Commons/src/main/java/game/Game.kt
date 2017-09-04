@@ -44,5 +44,6 @@ class Game(var gameData: GameData) : IGameData by gameData {
 
     companion object {
         fun getDbKeyFromId(gameId: Int) = "sg$gameId"
+        fun getLatestIdKey() = "sgLatestId"
     }
 }

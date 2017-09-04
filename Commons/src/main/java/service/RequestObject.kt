@@ -1,11 +1,10 @@
-package service.model
+package service
 
 import com.couchbase.client.java.AsyncBucket
 import game.Game
 import io.vertx.ext.web.RoutingContext
 import io.vertx.rxjava.core.CompositeFuture
 import io.vertx.rxjava.core.Future
-import service.AbstractRequestHandler
 
 
 data class RequestObject(
@@ -44,4 +43,7 @@ data class RequestObject(
             needsGameFuture.complete()
         }
 
+    fun getGameId(): Int {
+        throw NotImplementedError()
+    }
 }

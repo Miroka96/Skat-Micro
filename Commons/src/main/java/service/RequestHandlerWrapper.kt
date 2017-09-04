@@ -6,7 +6,6 @@ import game.Game
 import game.model.GameData
 import io.vertx.core.Handler
 import io.vertx.ext.web.RoutingContext
-import service.model.RequestObject
 
 class RequestHandlerWrapper(
         var requestHandler: AbstractRequestHandler,
@@ -43,11 +42,11 @@ class RequestHandlerWrapper(
     private fun getGameFromDatabase(
             next: Handler<RequestObject>
     ): Handler<RequestObject> {
-        if (requestHandler.needsGame == null) return next
+        if (requestHandler.needsGame == false) return next
 
         return Handler<RequestObject> { request: RequestObject ->
             db
-                    .readJson(Game.getDbKeyFromId(requestHandler.needsGame!!))
+                    .readJson(Game.getDbKeyFromId(request.getGameId()))
                     .map { doc: JsonDocument -> db.gameDataFrom(doc) }
                     .map { gameData: GameData -> Game(gameData) }
                     .subscribe(

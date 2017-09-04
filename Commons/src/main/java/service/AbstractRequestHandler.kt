@@ -1,12 +1,10 @@
 package service
 
-import service.model.RequestObject
-
 
 abstract class AbstractRequestHandler {
 
     open var needsDatabaseConnection = false
-    open var needsGame: Int? = null
+    open var needsGame = false
 
 
     abstract fun handleRequest(requestObject: RequestObject)
@@ -21,4 +19,5 @@ abstract class AbstractRequestHandler {
             requestObject.finishingFuture.cause().printStackTrace()
         }
     }
+
 }
