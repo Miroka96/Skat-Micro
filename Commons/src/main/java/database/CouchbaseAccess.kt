@@ -8,6 +8,8 @@ import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment
 import com.couchbase.client.java.util.retry.RetryBuilder
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import game.model.GameData
 import io.vertx.core.Future
 import io.vertx.core.json.JsonArray
 import rx.Observable
@@ -138,6 +140,12 @@ class CouchbaseAccess(
                 .doOnError { println("Could not delete $key") }
     }
 
+    var jsonmapper = jacksonObjectMapper()
+
+    fun gameDataFrom(json: String) = jsonmapper.readValue(json, GameData::class.java)
+    fun gameDataFrom(obj: JsonObject) = gameDataFrom(obj.toString())
+    fun gameDataFrom(doc: JsonDocument) = gameDataFrom(doc.content())
+
     companion object {
         var environment = DefaultCouchbaseEnvironment
                 .builder()
@@ -145,5 +153,6 @@ class CouchbaseAccess(
                 //.computationPoolSize(5)
                 .build()
             private set
+
     }
 }

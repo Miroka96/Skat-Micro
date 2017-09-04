@@ -42,4 +42,7 @@ class Game(var gameData: GameData) : IGameData by gameData {
         return data
     }
 
+    companion object {
+        fun getDbKeyFromId(gameId: Int) = "sg$gameId"
+    }
 }

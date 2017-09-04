@@ -1,28 +1,47 @@
 package service.model
 
+import com.couchbase.client.java.AsyncBucket
 import game.Game
-import io.vertx.ext.jdbc.JDBCClient
-import io.vertx.ext.sql.SQLConnection
 import io.vertx.ext.web.RoutingContext
+import io.vertx.rxjava.core.CompositeFuture
+import io.vertx.rxjava.core.Future
 import service.AbstractRequestHandler
-import user.User
+
 
 data class RequestObject(
-        val jdbc: JDBCClient,
-        var abstractRequestHandler: AbstractRequestHandler
+        var routingContext: RoutingContext,
+        private var requestHandler: AbstractRequestHandler
 ) {
 
-    var databaseConnection: SQLConnection? = null
+    var needsDatabaseConnectionFuture = Future.future<Unit>()
+    var needsGameFuture = Future.future<Unit>()
+    var chainFinishedFuture = Future.future<Unit>()
 
-    var routingContext: RoutingContext? = null
+    var futures = listOf(
+            needsDatabaseConnectionFuture,
+            needsGameFuture,
+            chainFinishedFuture
+    )
 
-    var user: User? = null
+    var finishingFuture = CompositeFuture.all(futures).setHandler { future ->
+        if (future.succeeded()) {
+            requestHandler.handleRequest(this)
+        } else {
+            requestHandler.handleFailedInitialization(this)
+        }
+    }
+
+
+    var bucket: AsyncBucket? = null
+        set(value) {
+            field = value
+            needsDatabaseConnectionFuture.complete()
+        }
 
     var game: Game? = null
-
-
-    fun handleRequest() {
-        abstractRequestHandler.handleRequest(this)
-    }
+        set(value) {
+            field = value
+            needsGameFuture.complete()
+        }
 
 }
