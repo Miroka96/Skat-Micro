@@ -59,7 +59,9 @@ class CreateGameHandler : AbstractRequestHandler() {
         }
     }
 
-    fun createNextGameDoc(nextGame: Observable<Game>) {
-
+    fun createNextGameDoc(nextGame: Observable<Game>): Observable<JsonDocument> {
+        return nextGame.map { game ->
+            game.dataToJsonDocument()
+        }
     }
 }

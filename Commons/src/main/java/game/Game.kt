@@ -1,14 +1,15 @@
 package game
 
 import cards.model.Hand
+import database.AbstractDataWrapper
+import database.DatabaseKeyAccess
 import game.model.GameData
 import game.model.IGameData
 import game.model.UserGameData
 import player.Player
 
-class Game(var gameData: GameData) : IGameData by gameData {
+class Game(var gameData: GameData) : IGameData by gameData, AbstractDataWrapper() {
     constructor() : this(GameData())
-
 
     var gameMode = GameMode.fromId(gameData.mode)
     var players = Array<Player>(3) { i ->
@@ -42,8 +43,10 @@ class Game(var gameData: GameData) : IGameData by gameData {
         return data
     }
 
-    companion object {
-        fun getDbKeyFromId(gameId: Int) = "sg$gameId"
-        fun getLatestIdKey() = "sgLatestId"
+    override fun getData() = gameData
+
+    companion object : DatabaseKeyAccess {
+        override fun getDbKeyFromId(id: Int) = "sg$id"
+        override fun getLatestIdKey() = "sgLatestId"
     }
 }
