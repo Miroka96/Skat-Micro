@@ -6,7 +6,7 @@ import com.couchbase.client.java.document.json.JsonObject
 abstract class AbstractDataWrapper {
     abstract var id: Int
 
-    private fun dataToJson(data: Any): String {
+    fun dataToJson(data: Any): String {
         return CouchbaseAccess.jsonmapper.writeValueAsString(data)
     }
 

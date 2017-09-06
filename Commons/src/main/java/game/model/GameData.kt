@@ -4,10 +4,11 @@ import cards.CardsetGenerator
 import cards.model.Cardset
 import player.model.PlayerData
 
-interface IGameDataCommon {
-
+interface IGameDataMinimal {
     var id: Int
+}
 
+interface IGameDataCommon : IGameDataMinimal {
     var value: Int
     var latestBid: Int
     var latestPlayer: Int
@@ -17,17 +18,22 @@ interface IGameData : IGameDataCommon {
     var cardset: Cardset
 }
 
+interface IGameDataDatabase : IGameData {
+    var players: Array<PlayerData>
+    var mode: Int
+}
+
 data class GameData(
         override var id: Int,
         override var cardset: Cardset
-) : IGameData {
+) : IGameDataDatabase {
     constructor() : this(-1, CardsetGenerator().generateShuffledCardset())
 
-    var players = Array<PlayerData>(3) { _ ->
+    override var players = Array<PlayerData>(3) { _ ->
         PlayerData()
     }
 
-    var mode = 0
+    override var mode = 0
 
     override var value = 0
     override var latestBid = -1

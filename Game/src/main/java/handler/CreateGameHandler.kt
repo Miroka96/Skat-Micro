@@ -2,66 +2,50 @@ package handler
 
 import com.couchbase.client.java.AsyncBucket
 import com.couchbase.client.java.document.JsonDocument
-import com.couchbase.client.java.document.json.JsonObject
-import com.couchbase.client.java.error.DocumentDoesNotExistException
-import database.CouchbaseAccess
-import datamodel.LatestGameId
 import game.Game
-import rx.Observable
+import io.vertx.ext.web.RoutingContext
 import service.AbstractRequestHandler
 import service.RequestObject
+import service.WebContentType.JSON
+import service.WebStatusCode.OK
+
 
 class CreateGameHandler : AbstractRequestHandler() {
     override var needsDatabaseConnection = true
 
 
     override fun handleRequest(requestObject: RequestObject) {
-        var bucket = requestObject.bucket!!
-        createNewGame(bucket)
-        bucket.close()
+        val bucket = requestObject.bucket!!
+        requestObject.routingContext
+        createNewGame(bucket, requestObject.routingContext)
     }
 
-    fun createNewGame(bucket: AsyncBucket) {
-        val latestIdDoc = getLatestGameId(bucket)
-        val latestId = parseLatestGameId(latestIdDoc)
-        val nextGame = createNextGame(latestId)
-
-    }
-
-    fun getLatestGameId(bucket: AsyncBucket): Observable<JsonDocument> {
-        val latestIdKey = Game.getLatestIdKey()
-        return bucket.get(latestIdKey)
-                .onErrorReturn {
-                    if (it is DocumentDoesNotExistException) {
-                        return@onErrorReturn JsonDocument.create(
-                                latestIdKey,
-                                JsonObject.fromJson(
-                                        CouchbaseAccess.jsonmapper.writeValueAsString(
-                                                LatestGameId(0)
-                                        )
-                                ))
-                    }
-                    throw it
+    fun createNewGame(bucket: AsyncBucket, routingContext: RoutingContext) {
+        bucket.counter(Game.getLatestIdKey(), 1, 1)
+                .map { doc -> doc.content().toInt() }
+                .map { id ->
+                    val game = Game()
+                    game.id = id
+                    return@map game
                 }
+                .doOnNext { game: Game ->
+                    val anonymousData = game.createAnonymousGameDataJson()
+                    routingContext.response()
+                            .setStatusCode(OK.code)
+                            .putHeader("content-type", JSON.type)
+                            .end(anonymousData)
+                }
+                .map { game ->
+                    game.dataToJsonDocument()
+                }
+                .flatMap { gameDoc: JsonDocument ->
+                    bucket.upsert(gameDoc)
+                }
+                .subscribe(
+                        { it: JsonDocument -> println(it) },
+                        { it: Throwable -> it.printStackTrace() },
+                        { bucket.close() }
+                )
     }
 
-    fun parseLatestGameId(latestId: Observable<JsonDocument>): Observable<LatestGameId> {
-        return latestId.map { doc ->
-            CouchbaseAccess.jsonmapper.readValue(doc.content().toString(), LatestGameId::class.java)
-        }
-    }
-
-    fun createNextGame(latestId: Observable<LatestGameId>): Observable<Game> {
-        return latestId.map { latestGameId ->
-            val game = Game()
-            game.id = latestGameId.latestId + 1
-            return@map game
-        }
-    }
-
-    fun createNextGameDoc(nextGame: Observable<Game>): Observable<JsonDocument> {
-        return nextGame.map { game ->
-            game.dataToJsonDocument()
-        }
-    }
 }

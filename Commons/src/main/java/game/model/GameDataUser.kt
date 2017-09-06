@@ -3,16 +3,19 @@ package game.model
 import cards.model.Hand
 import player.model.PlayerData
 
-interface IUserGameData : IGameDataCommon {
-    var hand: Hand
+interface IGameDataInformation : IGameDataMinimal {
     var mode: Int
+}
+
+interface IGameDataUser : IGameDataCommon, IGameDataInformation {
+    var hand: Hand
     var players: Array<PlayerData>
 }
 
-data class UserGameData(
+data class GameDataUser(
         override var id: Int,
         override var hand: Hand
-) : IUserGameData {
+) : IGameDataUser {
 
     override var players = Array<PlayerData>(3) {
         PlayerData()
