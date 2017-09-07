@@ -9,7 +9,7 @@ import game.model.GameDataUser
 import game.model.IGameData
 import player.Player
 
-class Game(var gameData: GameData) : IGameData by gameData, AbstractDataWrapper() {
+class Game(var gameData: GameData) : IGameData by gameData, AbstractDataWrapper(), DatabaseKeyAccess by Companion {
     constructor() : this(GameData())
 
     var gameMode = GameMode.fromId(gameData.mode)

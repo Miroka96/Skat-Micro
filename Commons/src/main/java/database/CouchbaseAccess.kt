@@ -82,8 +82,8 @@ class CouchbaseAccess(
     }
 
     fun closeBlocking(shutdownAll: Boolean = false) {
-        var latch = CountDownLatch(1)
-        var future = Future.future<Void> { it: Future<Void> ->
+        val latch = CountDownLatch(1)
+        val future = Future.future<Void> { it: Future<Void> ->
             latch.countDown()
         }
         close(future, shutdownAll)

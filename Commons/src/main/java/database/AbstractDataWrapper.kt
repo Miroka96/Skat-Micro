@@ -15,7 +15,10 @@ abstract class AbstractDataWrapper {
     fun dataToJsonDocument() = JsonDocument.create(getDbKeyFromId(), dataToJsonObject())
 
     abstract fun getData(): Any
+
+    abstract fun getDbKeyFromId(id: Int): String
     fun getDbKeyFromId() = getDbKeyFromId(id)
+    abstract fun getLatestIdKey(): String
 
     companion object : DatabaseKeyAccess {
         override fun getDbKeyFromId(id: Int): String {

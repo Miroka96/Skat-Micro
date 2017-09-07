@@ -23,7 +23,7 @@ abstract class DatabaseAccess {
 
         fun joinToString(strings: List<String>, delimeter: String): String {
             if (strings.size < 1) return ""
-            var iter = strings.iterator()
+            val iter = strings.iterator()
             val builder = StringBuilder(iter.next())
             while (iter.hasNext()) {
                 builder.append(delimeter)

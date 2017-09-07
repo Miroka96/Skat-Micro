@@ -16,17 +16,26 @@ data class RequestObject(
     var needsGameFuture = Future.future<Unit>()
     var chainFinishedFuture = Future.future<Unit>()
 
-    var futures = listOf(
-            needsDatabaseConnectionFuture,
-            needsGameFuture,
+    var futures = mutableListOf(
             chainFinishedFuture
     )
 
-    var finishingFuture = CompositeFuture.all(futures).setHandler { future ->
-        if (future.succeeded()) {
-            requestHandler.handleRequest(this)
-        } else {
-            requestHandler.handleFailedInitialization(this)
+    var finishingFuture: CompositeFuture
+
+    init {
+        if (requestHandler.needsGame) {
+            futures.add(needsGameFuture)
+        }
+        if (requestHandler.needsDatabaseConnection) {
+            futures.add(needsDatabaseConnectionFuture)
+        }
+
+        finishingFuture = CompositeFuture.all(futures.toList()).setHandler { future ->
+            if (future.succeeded()) {
+                requestHandler.handleRequest(this)
+            } else {
+                requestHandler.handleFailedInitialization(this)
+            }
         }
     }
 
