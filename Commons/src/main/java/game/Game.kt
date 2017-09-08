@@ -13,9 +13,7 @@ class Game(var gameData: GameData) : IGameData by gameData, AbstractDataWrapper(
     constructor() : this(GameData())
 
     var gameMode = GameMode.fromId(gameData.mode)
-    var players = Array<Player>(3) { i ->
-        Player(gameData.players[i])
-    }
+    var players: List<Player> = gameData.players.map { playerData -> Player(playerData) }
 
     fun getPlayerIndex(userId: Int): Int {
         for (i in 0..2) {

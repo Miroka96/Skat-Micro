@@ -29,7 +29,7 @@ data class GameData(
 ) : IGameDataDatabase {
     constructor() : this(-1, CardsetGenerator().generateShuffledCardset())
 
-    override var players = Array<PlayerData>(3) { _ ->
+    override var players = Array<PlayerData>(0) { _ ->
         PlayerData()
     }
 
