@@ -1,46 +1,44 @@
 package user
 
-interface ILoginUserData {
+
+interface IMinimalUserData {
     var username: String
+}
+
+interface ITokenUserData : IMinimalUserData {
+    var id: Int
+}
+
+interface ILoginUserData : IMinimalUserData {
     var password: String
 }
 
-interface IRegisterUserData : ILoginUserData
-
-open class LoginUserData {
-    var username: String? = null
-    var password: String? = null
-
-    constructor()
-
-    constructor(
-            username: String,
-            password: String
-    ) : this() {
-        this.username = username
-        this.password = password
-    }
+interface IRegisterUserData : ILoginUserData {
+    var firstName: String
+    var lastName: String
 }
 
-open class LoggedInUserData : LoginUserData {
-    var id: Int? = null
-
-    constructor()
-    constructor(
-            username: String,
-            password: String,
-            id: Int
-    ) : super(username, password) {
-        this.id = id
-    }
+data class LoginUserData(
+        override var username: String
+) : ILoginUserData {
+    override lateinit var password: String
 }
 
-class UserData : LoggedInUserData {
+data class TokenUserData(
+        override var id: Int
+) : ITokenUserData {
+    override lateinit var username: String
+}
 
-    constructor()
-    constructor(
-            username: String,
-            password: String,
-            id: Int
-    ) : super(username, password, id)
+data class UserData(
+        override var id: Int
+) : IRegisterUserData, ITokenUserData {
+    override lateinit var username: String
+
+    override lateinit var password: String
+
+    override lateinit var firstName: String
+
+    override lateinit var lastName: String
+
 }
