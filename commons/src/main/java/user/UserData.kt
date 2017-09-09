@@ -1,5 +1,12 @@
 package user
 
+interface ILoginUserData {
+    var username: String
+    var password: String
+}
+
+interface IRegisterUserData : ILoginUserData
+
 open class LoginUserData {
     var username: String? = null
     var password: String? = null

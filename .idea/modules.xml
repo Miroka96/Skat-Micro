@@ -2,10 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Authentication/Authentication.iml" filepath="$PROJECT_DIR$/Authentication/Authentication.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Commons/Commons.iml" filepath="$PROJECT_DIR$/Commons/Commons.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Game/Game.iml" filepath="$PROJECT_DIR$/Game/Game.iml" />
-      <module fileurl="file://$PROJECT_DIR$/skat-kotlin.iml" filepath="$PROJECT_DIR$/skat-kotlin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/commons/commons.iml" filepath="$PROJECT_DIR$/commons/commons.iml" />
+      <module fileurl="file://$PROJECT_DIR$/game-service/game-service.iml" filepath="$PROJECT_DIR$/game-service/game-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/skat-micro.iml" filepath="$PROJECT_DIR$/skat-micro.iml" />
+      <module fileurl="file://$PROJECT_DIR$/user-service/user-service.iml" filepath="$PROJECT_DIR$/user-service/user-service.iml" />
     </modules>
   </component>
 </project>

@@ -7,15 +7,24 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Authentication" />
+        <module name="commons" />
         <module name="Commons" />
         <module name="Game" />
+        <module name="game-service" />
+        <module name="user-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="Authentication" target="1.8" />
       <module name="Commons" target="1.8" />
+      <module name="commons" target="1.8" />
       <module name="Game" target="1.8" />
+      <module name="game-service" target="1.8" />
+      <module name="GameService" target="1.8" />
       <module name="skat-kotlin" target="1.8" />
+      <module name="skat-micro" target="1.8" />
+      <module name="user-service" target="1.8" />
+      <module name="UserService" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>
