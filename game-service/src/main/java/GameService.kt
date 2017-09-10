@@ -7,6 +7,8 @@ import service.RoutingPath
 
 class GameService : AbstractService() {
 
+    override val defaultPort = 8091
+
     override fun addRouting(router: Router) {
         router.get(RoutingPath.JOIN_GAME.toString()).handler(wrapHandler(JoinGameHandler()))
         router.get(RoutingPath.LEAVE_GAME.toString()).handler(wrapHandler(LeaveGameHandler()))

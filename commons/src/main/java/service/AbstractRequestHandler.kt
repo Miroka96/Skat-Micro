@@ -18,29 +18,21 @@ abstract class AbstractRequestHandler {
     fun handleFailedInitialization(requestObject: RequestObject) {
         val causes = MutableList<Throwable>(0, { Throwable() })
         for (future in requestObject.futures) {
-            var cause: Throwable?
             try {
+                val cause: Throwable
                 cause = future.cause()
-            } catch (ex: Exception) {
-                ex.printStackTrace()
-                cause = null
-            }
-            if (cause != null) {
                 causes.add(cause)
-                cause.printStackTrace()
+            } catch (ex: NullPointerException) {
             }
         }
-        var cause: Throwable?
+
         try {
+            val cause: Throwable
             cause = requestObject.finishingFuture.cause()
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            cause = null
-        }
-        if (cause != null) {
             causes.add(cause)
-            cause.printStackTrace()
+        } catch (ex: NullPointerException) {
         }
+
         val throwable = FailingReplyThrowable(causes, WebStatusCode.INTERNAL_ERROR)
         replyFailed(requestObject, throwable)
     }
@@ -63,37 +55,14 @@ abstract class AbstractRequestHandler {
         return allFutures
     }
 
-    private fun getThrowables(future: CompositeFuture): FailingReplyThrowable {
-        val causes = MutableList(0, { Throwable() })
-        try {
-            val cause = future.cause()
-            causes.add(cause)
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
-        for (causeIndex in 0..future.size()) {
-            try {
-                val cause = future.cause(causeIndex)
-                if (cause is FailingReplyThrowable) {
-                    return cause
-                }
-                causes.add(cause)
-            } catch (ex: Exception) {
-                ex.printStackTrace()
-            }
-        }
-        if (causes.isEmpty()) {
-            causes.add(Exception("Unknown Error"))
-        }
-        return FailingReplyThrowable(causes)
-    }
-
     private fun handleCompositeFuture(routingContext: RoutingContext, operation: AsyncResult<CompositeFuture>) {
-        val future = operation.result()
-        if (future.failed()) {
-            replyFailed(routingContext, getThrowables(future))
+        if (operation.failed()) {
+            // operation has no CompositeFuture as result
+            // instead the single futures as results
+            replyFailed(routingContext, FailingReplyThrowable(operation.cause()))
         } else {
-            val responseData: String = future.resultAt(0)
+            val compositeFuture = operation.result()
+            val responseData: String = compositeFuture.resultAt(0)
             replySuccessful(routingContext, responseData)
         }
     }
@@ -106,16 +75,19 @@ abstract class AbstractRequestHandler {
     fun replySuccessful(requestObject: RequestObject, data: String) =
             replySuccessful(requestObject.routingContext, data)
 
-    fun replySuccessful(routingContext: RoutingContext, data: String) {
-        reply(routingContext.response(), successfulResponseCode, data)
-    }
+    fun replySuccessful(routingContext: RoutingContext, data: String) =
+            reply(routingContext.response(), successfulResponseCode, data)
+
 
     fun replyFailed(requestObject: RequestObject, throwable: FailingReplyThrowable) =
             replyFailed(requestObject.routingContext, throwable)
 
-    fun replyFailed(routingContext: RoutingContext, throwable: FailingReplyThrowable) {
-        reply(routingContext.response(), throwable.webStatusCode, throwable.getString())
-    }
+    fun replyFailed(routingContext: RoutingContext, throwable: FailingReplyThrowable) =
+            replyFailedRootCause(routingContext, throwable.getRootOfCauses())
+
+    fun replyFailedRootCause(routingContext: RoutingContext, throwable: FailingReplyThrowable) =
+            reply(routingContext.response(), throwable.webStatusCode, throwable.getReply())
+
 
     private fun reply(response: HttpServerResponse, statuscode: WebStatusCode, data: String) {
         response.setStatusCode(statuscode.code)

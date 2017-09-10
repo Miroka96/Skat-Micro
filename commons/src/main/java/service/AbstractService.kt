@@ -3,12 +3,16 @@ package service
 import database.CouchbaseAccess
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
+import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
+import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
 
 
 abstract class AbstractService : AbstractVerticle() {
+    open val defaultPort = 8080
+
     val conf: JsonObject by lazy {
         config()
     }
@@ -16,6 +20,8 @@ abstract class AbstractService : AbstractVerticle() {
     val router: Router by lazy {
         Router.router(vertx)
     }
+
+    lateinit var db: CouchbaseAccess
 
     final override fun start(fut: Future<Void>) {
 
@@ -34,7 +40,7 @@ abstract class AbstractService : AbstractVerticle() {
                 .listen(
                         // Retrieve the port from the configuration,
                         // default to 8080.
-                        config().getInteger("http.port", 8080)
+                        config().getInteger("http.port", defaultPort)
                 ) { result ->
                     if (result.succeeded()) {
                         fut.complete()
@@ -55,9 +61,8 @@ abstract class AbstractService : AbstractVerticle() {
     open fun customStart() {}
     open fun customStop() {}
 
-    lateinit var db: CouchbaseAccess
-
-    fun wrapHandler(requestHandler: AbstractRequestHandler)
+    fun wrapHandler(requestHandler: AbstractRequestHandler): Handler<RoutingContext>
             = RequestHandlerWrapper(requestHandler, db).wrapHandler()
+
 
 }

@@ -94,7 +94,7 @@ class CouchbaseAccess(
         if (bucket == null || bucket!!.isClosed) {
             // catch further calls during creation
             if (creationObservable != null) return creationObservable!!
-            var creation = createBucket()
+            val creation = createBucket()
                     .doOnError { it ->
                         println("Could not open Bucket ${joinToString(seedNodes, ",")}:$bucketName")
                     }

@@ -7,6 +7,8 @@ import service.RoutingPath
 
 class UserService : AbstractService() {
 
+    override val defaultPort = 8090
+
     override fun addRouting(router: Router) {
         router.get(RoutingPath.LOGIN_USER.toString()).handler(wrapHandler(LoginUserHandler()))
         router.get(RoutingPath.REGISTER_USER.toString()).handler(wrapHandler(RegisterUserHandler()))
