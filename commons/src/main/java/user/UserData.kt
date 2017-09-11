@@ -31,6 +31,8 @@ data class LoginUserData(
 data class RegisterUserData(
         override var username: String
 ) : IRegisterUserData {
+    constructor() : this("")
+
     override lateinit var password: String
     override lateinit var firstName: String
     override lateinit var lastName: String
@@ -49,6 +51,8 @@ data class RegisterUserData(
 data class TokenUserData(
         override var id: Int
 ) : ITokenUserData {
+    constructor() : this(0)
+
     override lateinit var username: String
 
     constructor(userData: UserData) : this(userData.id) {

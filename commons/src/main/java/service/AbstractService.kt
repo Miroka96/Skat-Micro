@@ -26,7 +26,7 @@ abstract class AbstractService : AbstractVerticle() {
     final override fun start(fut: Future<Void>) {
 
         db = CouchbaseAccess(config())
-        router.route("/").handler(BodyHandler.create()) //This is really important if you use routing
+        router.route().handler(BodyHandler.create()) //This is really important if you use routing
         // -> read documentation. If not used the body wont be passed
 
         addRouting(router)
@@ -56,7 +56,6 @@ abstract class AbstractService : AbstractVerticle() {
     }
 
     abstract fun addRouting(router: Router)
-    //router.get("/").handler(wrapHandler(AbstractRequestHandler()))
 
     open fun customStart() {}
     open fun customStop() {}

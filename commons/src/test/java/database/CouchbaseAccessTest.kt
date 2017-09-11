@@ -5,14 +5,11 @@ import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import game.model.GameData
-import org.jboss.arquillian.junit.Arquillian
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
 
 
-@RunWith(Arquillian::class)
 class CouchbaseAccessTest {
     var host = "172.17.0.2"
     var bucketname = "default"
@@ -24,8 +21,8 @@ class CouchbaseAccessTest {
 
     @Test
     fun accessCouchbaseServer() {
-        var cluster = CouchbaseCluster.create(host)
-        var bucket = cluster.openBucket()
+        val cluster = CouchbaseCluster.create(host)
+        val bucket = cluster.openBucket()
         bucket.upsert(JsonDocument.create(testKey, JsonObject.fromJson(testJson)))
         bucket.close()
         cluster.disconnect()
@@ -33,7 +30,7 @@ class CouchbaseAccessTest {
 
     @Test
     fun accessCouchbaseServerAsync() {
-        var content = JsonObject.fromJson(testJson)
+        val content = JsonObject.fromJson(testJson)
         var doc = JsonDocument.create(testKey, content)
 
         for (item in db.writeJson(testKey, testJson)
@@ -83,20 +80,19 @@ class CouchbaseAccessTest {
 
     @Test
     fun storeGameData() {
-        var game = GameData()
-
+        val game = GameData()
         val jsonMapper = jacksonObjectMapper()
 
-        var gameJson = jsonMapper.writeValueAsString(game)
+        val gameJson = jsonMapper.writeValueAsString(game)
         db.writeJson("testGame", gameJson)
                 .doOnCompleted {
                     println("Wrote Game")
                     db.readJson("testGame")
                             .doOnNext { it ->
                                 println("Got Game")
-                                var dbJson = it.content().toString()
-                                var dbGame = jsonMapper.readValue(dbJson, GameData::class.java)
-                                var dbGameJson = jsonMapper.writeValueAsString(dbGame)
+                                val dbJson = it.content().toString()
+                                val dbGame = jsonMapper.readValue(dbJson, GameData::class.java)
+                                val dbGameJson = jsonMapper.writeValueAsString(dbGame)
                                 assertEquals(gameJson, dbGameJson)
                             }
                             .toBlocking().last()

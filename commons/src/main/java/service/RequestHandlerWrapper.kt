@@ -15,6 +15,7 @@ class RequestHandlerWrapper(
     fun wrapHandler() = Handler<RoutingContext>
     { routingContext ->
         //TODO fill all needed arguments
+
         val request = RequestObject(routingContext, requestHandler)
 
         createDatabaseConnection(

@@ -2,16 +2,11 @@ package game.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import org.jboss.arquillian.container.test.api.Deployment
-import org.jboss.arquillian.junit.Arquillian
-import org.jboss.shrinkwrap.api.ShrinkWrap
-import org.jboss.shrinkwrap.api.asset.EmptyAsset
-import org.jboss.shrinkwrap.api.spec.JavaArchive
 import org.junit.Test
-import org.junit.runner.RunWith
+import user.RegisterUserData
 import kotlin.test.assertEquals
 
-@RunWith(Arquillian::class)
+
 class GameDataTest {
 
     val jsonMapper = jacksonObjectMapper()
@@ -19,9 +14,21 @@ class GameDataTest {
     @Test
     fun gameDataToJson() {
         val data = GameData()
-        var dataJson = jsonMapper.writeValueAsString(data)
-        var dataRead = jsonMapper.readValue(dataJson, GameData::class.java)
-        var dataReadJson = jsonMapper.writeValueAsString(dataRead)
+        val dataJson = jsonMapper.writeValueAsString(data)
+        val dataRead = jsonMapper.readValue(dataJson, GameData::class.java)
+        val dataReadJson = jsonMapper.writeValueAsString(dataRead)
+        assertEquals(dataJson, dataReadJson)
+    }
+
+    @Test
+    fun registerUserDataToJson() {
+        val data = RegisterUserData("username")
+        data.password = "password"
+        data.firstName = "first"
+        data.lastName = "last"
+        val dataJson = "{\"username\":\"USERNAME\",\"password\":\"PASSWORD\",\"firstName\":\"FIRST_NAME\",\"lastName\":\"LAST_NAME\"}"//jsonMapper.writeValueAsString(data)
+        val dataRead = jsonMapper.readValue(dataJson, RegisterUserData::class.java)
+        val dataReadJson = jsonMapper.writeValueAsString(dataRead)
         assertEquals(dataJson, dataReadJson)
     }
 
@@ -37,28 +44,9 @@ class GameDataTest {
         val data1_json: String = jsonMapper.writeValueAsString(data1)
         val data2_json: String = jsonMapper.writeValueAsString(data2)
 
-        /*
-        println(data)
-        println(json1)
-        println(data1)
-        println(data2)
-        println(data1_json)
-        println(data2_json)
-        */
-
         assertEquals(json, json1)
         assertEquals(json, data1_json)
         assertEquals(json, data2_json)
-    }
-
-    companion object {
-
-        @Deployment
-        fun createDeployment(): JavaArchive {
-            return ShrinkWrap.create(JavaArchive::class.java)
-                    .addClass(GameData::class.java)
-                    .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
-        }
     }
 
     data class Data1(val id: Int,

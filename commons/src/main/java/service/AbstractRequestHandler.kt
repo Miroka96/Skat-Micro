@@ -70,7 +70,7 @@ abstract class AbstractRequestHandler {
     abstract fun startOperation(requestObject: RequestObject, replyFuture: Future<String>, operationFutures: Array<Future<out Any>>)
 
 
-    open val successfulResponseCode = WebStatusCode.OK
+    abstract val successfulResponseCode: WebStatusCode
 
     fun replySuccessful(requestObject: RequestObject, data: String) =
             replySuccessful(requestObject.routingContext, data)

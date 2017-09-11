@@ -1,12 +1,16 @@
 package service
 
-import database.CouchbaseAccess
+import io.vertx.core.json.JsonObject
 
 abstract class CorrectDataTemplate {
 
     abstract val correctData: Any
 
+    val correctDataJsonObject: JsonObject by lazy {
+        JsonObject.mapFrom(correctData)
+    }
+
     val correctDataJson: String by lazy {
-        CouchbaseAccess.jsonmapper.writeValueAsString(correctData)
+        correctDataJsonObject.toString()
     }
 }

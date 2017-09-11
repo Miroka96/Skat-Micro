@@ -49,19 +49,13 @@ class FailingReplyThrowable(
 
     private fun getCausesAsJson(): JsonObject {
         val exceptions = JsonArray()
-        for (cause in causes) {
-            val exception = JsonObject()
-            if (cause.message != null) {
-                exception.put("message", cause.message)
-            }
-            exception.put("stacktrace", cause.toString())
-            exceptions.add(exception)
+        causes.forEach { cause ->
+            exceptions.add(getSingleExceptionJsonObject(cause))
         }
-
-        val result = JsonObject()
-        result.put("exceptions", exceptions)
-        return result
+        return getExceptionsJsonObject(exceptions)
     }
+
+
 
     fun getRootOfCauses(): FailingReplyThrowable {
         if (causes.size == 1) {
@@ -75,11 +69,36 @@ class FailingReplyThrowable(
     }
 
     companion object {
+        private fun getSingleExceptionJsonObject(cause: Throwable) = getSingleExceptionJsonObject(cause.message, cause.toString())
+        private fun getSingleExceptionJsonObject(message: String? = null, stacktrace: String? = null): JsonObject {
+            val exception = JsonObject()
+            if (message != null) {
+                exception.put("message", message)
+            }
+            if (stacktrace != null) {
+                exception.put("stacktrace", stacktrace)
+            }
+            return exception
+        }
+
+        private fun getExceptionsJsonObject(exceptions: JsonArray): JsonObject {
+            val result = JsonObject()
+            result.put("exceptions", exceptions)
+            return result
+        }
+
+
         fun databaseError(throwable: Throwable) = FailingReplyThrowable(throwable, WebStatusCode.SERVICE_UNAVAILABLE)
 
-        fun malformedRequest(throwable: Throwable, correctDataJson: String): FailingReplyThrowable {
+        fun emptyBody(throwable: Throwable, correctData: JsonObject): FailingReplyThrowable =
+                malformedRequest(throwable, correctData, null)
+
+        fun malformedRequest(throwable: Throwable, correctData: JsonObject, received: String? = null): FailingReplyThrowable {
             val failingReply = FailingReplyThrowable(throwable, WebStatusCode.BAD_REQUEST)
-            failingReply.message = correctDataJson
+            val reply = JsonObject()
+            reply.put("correct", correctData)
+            reply.put("received", received)
+            failingReply.replyJson = reply
             return failingReply
         }
 
