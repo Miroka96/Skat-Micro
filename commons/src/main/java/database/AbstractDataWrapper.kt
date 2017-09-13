@@ -3,7 +3,7 @@ package database
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 
-abstract class AbstractDataWrapper {
+abstract class AbstractDataWrapper : DatabaseAccess {
     abstract var id: Int
 
     fun dataToJson(data: Any): String {
@@ -16,16 +16,16 @@ abstract class AbstractDataWrapper {
 
     abstract fun getData(): Any
 
-    abstract fun getDbKeyFromId(id: Int): String
+    abstract override fun getDbKeyFromId(id: Int): String
     fun getDbKeyFromId() = getDbKeyFromId(id)
-    abstract fun getLatestIdKey(): String
+    abstract override fun latestIdKey(): String
 
-    companion object : DatabaseKeyAccess {
+    companion object : DatabaseAccess {
         override fun getDbKeyFromId(id: Int): String {
             throw NotImplementedError()
         }
 
-        override fun getLatestIdKey(): String {
+        override fun latestIdKey(): String {
             throw NotImplementedError()
         }
     }

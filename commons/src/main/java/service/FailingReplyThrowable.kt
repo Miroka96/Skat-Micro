@@ -103,5 +103,15 @@ class FailingReplyThrowable(
         }
 
         fun unknownError(throwable: Throwable) = FailingReplyThrowable(throwable, WebStatusCode.INTERNAL_ERROR)
+
+        fun invalidUsername(): FailingReplyThrowable {
+            val failingReply = FailingReplyThrowable(NullPointerException("Username does not exist"), WebStatusCode.UNAUTHORIZED)
+            return failingReply
+        }
+
+        fun invalidPassword(): FailingReplyThrowable {
+            val failingReply = FailingReplyThrowable(AssertionError("Invalid Password Supplied"), WebStatusCode.UNAUTHORIZED)
+            return failingReply
+        }
     }
 }

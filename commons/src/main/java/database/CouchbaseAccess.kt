@@ -21,7 +21,7 @@ class CouchbaseAccess(
         var seedNodes: List<String>,
         var bucketName: String,
         var bucketPassword: String
-) : DatabaseAccess() {
+) : AbstractDatabaseAccess() {
 
     private var cluster: CouchbaseAsyncCluster
     @Volatile private var bucket: AsyncBucket? = null
@@ -56,7 +56,6 @@ class CouchbaseAccess(
 
     private fun createBucket(): Observable<AsyncBucket> {
         return cluster.openBucket()
-                .last()
                 .doOnNext {
                     bucket = it
                 }

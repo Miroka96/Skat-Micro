@@ -26,10 +26,21 @@ class GameDataTest {
         data.password = "password"
         data.firstName = "first"
         data.lastName = "last"
-        val dataJson = "{\"username\":\"USERNAME\",\"password\":\"PASSWORD\",\"firstName\":\"FIRST_NAME\",\"lastName\":\"LAST_NAME\"}"//jsonMapper.writeValueAsString(data)
+        val dataJson = jsonMapper.writeValueAsString(data)
         val dataRead = jsonMapper.readValue(dataJson, RegisterUserData::class.java)
         val dataReadJson = jsonMapper.writeValueAsString(dataRead)
         assertEquals(dataJson, dataReadJson)
+    }
+
+    @Test
+    fun minimalizedRegisterUserDataToJson() {
+        val data = RegisterUserData("username")
+        data.password = "password"
+        data.firstName = "first"
+        data.lastName = "last"
+        val dataJson = "{\"username\":\"${data.username}\"}"//jsonMapper.writeValueAsString(data)
+        val dataRead = jsonMapper.readValue(dataJson, RegisterUserData::class.java)
+        assertEquals(data.username, dataRead.username)
     }
 
     @Test

@@ -1,18 +1,22 @@
 package handler
 
+import User
+import UserService
 import com.couchbase.client.java.AsyncBucket
-import com.couchbase.client.java.document.JsonDocument
+import com.couchbase.client.java.query.AsyncN1qlQueryResult
+import com.couchbase.client.java.query.AsyncN1qlQueryRow
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import io.vertx.core.Future
 import io.vertx.core.json.DecodeException
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
+import rx.Observable
 import service.AbstractRequestHandler
 import service.FailingReplyThrowable
 import service.RequestObject
 import service.WebStatusCode
+import user.LoggedInUserData
 import user.LoginUserData
-import user.User
 import user.UserData
 
 class LoginUserHandler : AbstractRequestHandler() {
@@ -27,17 +31,11 @@ class LoginUserHandler : AbstractRequestHandler() {
     }
 
     fun loginUser(routingContext: RoutingContext, replyFuture: Future<String>, database: Future<out Any>, bucket: AsyncBucket) {
-
-        bucket.counter(User.getLatestIdKey(), 1, 1)
-                .map { doc -> doc.content().toInt() }
-                .map { id ->
-                    val body = routingContext.bodyAsString
+        Observable.just(routingContext.bodyAsString)
+                .map { body ->
                     try {
-                        val user: User
                         val login = JsonObject(body).mapTo(LoginUserData::class.java)
-                        user = User(UserData(login))
-                        user.id = id
-                        return@map user
+                        return@map login
                     } catch (ex: NullPointerException) {
                         throw FailingReplyThrowable.emptyBody(ex, LoginUserData.correctDataJsonObject)
                     } catch (ex: DecodeException) {
@@ -46,28 +44,40 @@ class LoginUserHandler : AbstractRequestHandler() {
                         throw FailingReplyThrowable.malformedRequest(ex, LoginUserData.correctDataJsonObject, body)
                     }
                 }
+                .flatMap { userData ->
+                    bucket.query(UserService.queries.getUserByUsername(userData.username))
+                            .doOnError { it ->
+                                database.fail(FailingReplyThrowable.databaseError(it))
+                            }
+                            .flatMap { queryResult: AsyncN1qlQueryResult ->
+                                queryResult.rows()
+                            }
+                            .singleOrDefault(null)
+                            .map { row: AsyncN1qlQueryRow ->
+                                try {
+                                    JsonObject(row.value().toMap()).mapTo(LoggedInUserData::class.java)
+                                } catch (ex: NullPointerException) {
+                                    throw FailingReplyThrowable.invalidUsername()
+                                }
+                            }
+                            .doOnNext { validData ->
+                                if (!validData.password.equals(userData.password)) {
+                                    throw FailingReplyThrowable.invalidPassword()
+                                }
+                                database.complete()
+                            }
+                            .map { validData: LoggedInUserData ->
+                                User(UserData(validData))
+                            }
+                }
                 .doOnNext { user: User ->
                     val tokenUserData = user.createTokenUserDataJson()
                     replyFuture.complete(tokenUserData)
                 }
-                .map { user ->
-                    user.dataToJsonDocument()
-                }
-                .flatMap { userDoc ->
-                    bucket.upsert(userDoc).doOnError { it ->
-                        database.fail(FailingReplyThrowable.databaseError(it))
-                    }
-                }
-                .doOnNext {
-                    database.complete()
-                }
-                .doOnCompleted {
-                    bucket.close()
-                }
                 .subscribe(
-                        { it: JsonDocument ->
-                            print("new User registered: ")
-                            println(it)
+                        { user: User ->
+                            print("User logged in: ")
+                            println(user)
                         },
                         { ex: Throwable ->
                             val failingReply: FailingReplyThrowable
@@ -78,6 +88,9 @@ class LoginUserHandler : AbstractRequestHandler() {
                                 ex.printStackTrace()
                             }
                             replyFuture.fail(failingReply)
+                        },
+                        {
+                            bucket.close()
                         })
     }
 

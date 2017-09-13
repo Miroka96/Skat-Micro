@@ -1,11 +1,12 @@
-package user
-
 import database.AbstractDataWrapper
-import database.DatabaseKeyAccess
+import database.DatabaseAccess
+import user.IUserData
+import user.TokenUserData
+import user.UserData
 
 class User(
         var userData: UserData
-) : IUserData by userData, AbstractDataWrapper(), DatabaseKeyAccess by Companion {
+) : IUserData by userData, AbstractDataWrapper(), DatabaseAccess by Companion {
     override fun getData() = userData
 
     constructor() : this(UserData())
@@ -14,8 +15,8 @@ class User(
 
     fun createTokenUserDataJson() = dataToJson(createTokenUserData())
 
-    companion object : DatabaseKeyAccess {
+    companion object : DatabaseAccess {
         override fun getDbKeyFromId(id: Int) = "skat::user::$id"
-        override fun getLatestIdKey() = "skat::user::id"
+        override fun latestIdKey() = "skat::user::id"
     }
 }

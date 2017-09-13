@@ -1,3 +1,4 @@
+import database.AbstractQueries
 import handler.LoginUserHandler
 import handler.RegisterUserHandler
 import handler.VerifyUserHandler
@@ -15,4 +16,13 @@ class UserService : AbstractService() {
         router.get(RoutingPath.VERIFY_USER.toString()).handler(wrapHandler(VerifyUserHandler()))
     }
 
+    override val queries: AbstractQueries by lazy { UserService.queries }
+
+    override fun customStart() {
+        UserService.queries = UserQueries(db.bucketName)
+    }
+
+    companion object {
+        lateinit var queries: UserQueries
+    }
 }

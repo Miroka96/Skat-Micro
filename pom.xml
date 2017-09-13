@@ -115,6 +115,13 @@
         </dependency>
 
 
+        <dependency>
+            <groupId>one.codebase.skat</groupId>
+            <artifactId>commons</artifactId>
+            <version>${skat.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

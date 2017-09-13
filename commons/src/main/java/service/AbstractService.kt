@@ -1,5 +1,6 @@
 package service
 
+import database.AbstractQueries
 import database.CouchbaseAccess
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
@@ -22,10 +23,23 @@ abstract class AbstractService : AbstractVerticle() {
     }
 
     lateinit var db: CouchbaseAccess
+    abstract val queries: AbstractQueries
+
 
     final override fun start(fut: Future<Void>) {
 
         db = CouchbaseAccess(config())
+        db.checkBucket()
+                .flatMap { bucket ->
+                    bucket.bucketManager()
+                }
+                .flatMap { mgr ->
+                    mgr.createN1qlPrimaryIndex(true, true)
+                    mgr.buildN1qlDeferredIndexes()
+                }
+                .toBlocking()
+                .last()
+
         router.route().handler(BodyHandler.create()) //This is really important if you use routing
         // -> read documentation. If not used the body wont be passed
 
@@ -39,7 +53,7 @@ abstract class AbstractService : AbstractVerticle() {
 
                 .listen(
                         // Retrieve the port from the configuration,
-                        // default to 8080.
+                        // default to 8080
                         config().getInteger("http.port", defaultPort)
                 ) { result ->
                     if (result.succeeded()) {

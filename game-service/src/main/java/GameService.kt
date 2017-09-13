@@ -1,3 +1,4 @@
+import database.AbstractQueries
 import handler.CreateGameHandler
 import handler.JoinGameHandler
 import handler.LeaveGameHandler
@@ -13,6 +14,16 @@ class GameService : AbstractService() {
         router.get(RoutingPath.JOIN_GAME.toString()).handler(wrapHandler(JoinGameHandler()))
         router.get(RoutingPath.LEAVE_GAME.toString()).handler(wrapHandler(LeaveGameHandler()))
         router.get(RoutingPath.CREATE_GAME.toString()).handler(wrapHandler(CreateGameHandler()))
+    }
+
+    override val queries: AbstractQueries by lazy { GameService.queries }
+
+    override fun customStart() {
+        GameService.queries = GameQueries(db.bucketName)
+    }
+
+    companion object {
+        lateinit var queries: GameQueries
     }
 
 }

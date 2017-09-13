@@ -21,7 +21,7 @@ class CreateGameHandler : AbstractRequestHandler() {
     }
 
     fun startOperation(replyFuture: Future<String>, database: Future<out Any>, bucket: AsyncBucket) {
-        bucket.counter(Game.getLatestIdKey(), 1, 1)
+        bucket.counter(Game.latestIdKey(), 1, 1)
                 .map { doc -> doc.content().toInt() }
                 .map { id ->
                     val game = Game()

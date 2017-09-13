@@ -15,6 +15,8 @@ interface ILoginUserData : IMinimalUserData {
     var password: String
 }
 
+interface ILoggedInUserData : ITokenUserData, ILoginUserData
+
 interface IRegisterUserData : ILoginUserData {
     var firstName: String
     var lastName: String
@@ -26,12 +28,32 @@ data class LoginUserData(
         override var username: String
 ) : ILoginUserData {
     override lateinit var password: String
+
+    companion object : CorrectDataTemplate() {
+        override val correctData: LoginUserData by lazy {
+            val login = LoginUserData("USERNAME")
+            login.password = "PASSWORD"
+            return@lazy login
+        }
+    }
+}
+
+data class LoggedInUserData(
+        override var id: Int,
+        override var username: String,
+        override var password: String
+) : ILoggedInUserData {
+
+    companion object {
+        val template by lazy {
+            LoggedInUserData(0, "", "")
+        }
+    }
 }
 
 data class RegisterUserData(
-        override var username: String
+        override var username: String = ""
 ) : IRegisterUserData {
-    constructor() : this("")
 
     override lateinit var password: String
     override lateinit var firstName: String
@@ -49,9 +71,8 @@ data class RegisterUserData(
 }
 
 data class TokenUserData(
-        override var id: Int
+        override var id: Int = 0
 ) : ITokenUserData {
-    constructor() : this(0)
 
     override lateinit var username: String
 
@@ -74,5 +95,11 @@ data class UserData(
         this.password = newUser.password
         this.firstName = newUser.firstName
         this.lastName = newUser.lastName
+    }
+
+    constructor(userLogin: ILoggedInUserData) : this() {
+        this.id = userLogin.id
+        this.username = userLogin.username
+        this.password = userLogin.password
     }
 }

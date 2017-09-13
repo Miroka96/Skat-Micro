@@ -1,5 +1,6 @@
 package handler
 
+import User
 import com.couchbase.client.java.AsyncBucket
 import com.couchbase.client.java.document.JsonDocument
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
@@ -12,7 +13,6 @@ import service.FailingReplyThrowable
 import service.RequestObject
 import service.WebStatusCode
 import user.RegisterUserData
-import user.User
 import user.UserData
 
 class RegisterUserHandler : AbstractRequestHandler() {
@@ -27,7 +27,7 @@ class RegisterUserHandler : AbstractRequestHandler() {
 
     fun registerUser(routingContext: RoutingContext, replyFuture: Future<String>, database: Future<out Any>, bucket: AsyncBucket) {
         //TODO ("check whether the user does already exist")
-        bucket.counter(User.getLatestIdKey(), 1, 1)
+        bucket.counter(User.latestIdKey(), 1, 1)
                 .map { doc -> doc.content().toInt() }
                 .map { id ->
                     val body = routingContext.bodyAsString
@@ -56,17 +56,15 @@ class RegisterUserHandler : AbstractRequestHandler() {
                     bucket.upsert(userDoc).doOnError { it ->
                         database.fail(FailingReplyThrowable.databaseError(it))
                     }
-                }
-                .doOnNext {
-                    database.complete()
-                }
-                .doOnCompleted {
-                    bucket.close()
+                            .doOnCompleted {
+                                bucket.close()
+                            }
                 }
                 .subscribe(
                         { it: JsonDocument ->
                             print("new User registered: ")
                             println(it)
+                            database.complete()
                         },
                         { ex: Throwable ->
                             val failingReply: FailingReplyThrowable
