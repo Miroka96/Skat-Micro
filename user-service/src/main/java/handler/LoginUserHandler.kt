@@ -34,12 +34,13 @@ class LoginUserHandler : AbstractRequestHandler() {
         Observable.just(routingContext.bodyAsString)
                 .map { body ->
                     try {
+                        println(body)
                         val login = JsonObject(body).mapTo(LoginUserData::class.java)
                         return@map login
                     } catch (ex: NullPointerException) {
                         throw FailingReplyThrowable.emptyBody(ex, LoginUserData.correctDataJsonObject)
                     } catch (ex: DecodeException) {
-                        throw FailingReplyThrowable.emptyBody(ex, LoginUserData.correctDataJsonObject)
+                        throw FailingReplyThrowable.malformedRequest(ex, LoginUserData.correctDataJsonObject, body)
                     } catch (ex: MismatchedInputException) {
                         throw FailingReplyThrowable.malformedRequest(ex, LoginUserData.correctDataJsonObject, body)
                     }

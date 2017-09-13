@@ -25,9 +25,9 @@ interface IRegisterUserData : ILoginUserData {
 interface IUserData : IRegisterUserData, ITokenUserData
 
 data class LoginUserData(
-        override var username: String
+        override var username: String = "",
+        override var password: String = ""
 ) : ILoginUserData {
-    override lateinit var password: String
 
     companion object : CorrectDataTemplate() {
         override val correctData: LoginUserData by lazy {
