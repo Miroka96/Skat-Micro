@@ -8,6 +8,7 @@ import io.vertx.core.Future
 import io.vertx.core.json.DecodeException
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
+import rx.Observable
 import service.AbstractRequestHandler
 import service.FailingReplyThrowable
 import service.RequestObject
@@ -27,16 +28,13 @@ class RegisterUserHandler : AbstractRequestHandler() {
 
     fun registerUser(routingContext: RoutingContext, replyFuture: Future<String>, database: Future<out Any>, bucket: AsyncBucket) {
         //TODO ("check whether the user does already exist")
-        bucket.counter(User.latestIdKey(), 1, 1)
-                .map { doc -> doc.content().toInt() }
-                .map { id ->
-                    val body = routingContext.bodyAsString
+        Observable.just(routingContext.bodyAsString)
+                .map { body ->
                     try {
-                        val user: User
-                        val register = JsonObject(body).mapTo(RegisterUserData::class.java)
-                        user = User(UserData(register))
-                        user.id = id
-                        return@map user
+                        User(
+                                UserData(
+                                        JsonObject(body)
+                                                .mapTo(RegisterUserData::class.java)))
                     } catch (ex: NullPointerException) {
                         throw FailingReplyThrowable.emptyBody(ex, RegisterUserData.correctDataJsonObject)
                     } catch (ex: DecodeException) {
@@ -44,6 +42,14 @@ class RegisterUserHandler : AbstractRequestHandler() {
                     } catch (ex: MismatchedInputException) {
                         throw FailingReplyThrowable.malformedRequest(ex, RegisterUserData.correctDataJsonObject, body)
                     }
+                }
+                .flatMap { user ->
+                    bucket.counter(User.latestIdKey(), 1, 1)
+                            .map { doc -> doc.content().toInt() }
+                            .map { id ->
+                                user.id = id
+                                user
+                            }
                 }
                 .doOnNext { user: User ->
                     val tokenUserData = user.createTokenUserDataJson()

@@ -38,7 +38,7 @@ class LoginUserHandler : AbstractUserHandler() {
                         throw FailingReplyThrowable.malformedRequest(ex, LoginUserData.correctDataJsonObject, body)
                     }
                 }
-                .flatMap { userData ->
+                .flatMap { userData: LoginUserData ->
                     checkLoginData(bucket, userData, database)
                 }
                 .doOnNext { user: User ->
