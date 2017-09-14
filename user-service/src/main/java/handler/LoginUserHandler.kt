@@ -1,25 +1,19 @@
 package handler
 
 import User
-import UserService
 import com.couchbase.client.java.AsyncBucket
-import com.couchbase.client.java.query.AsyncN1qlQueryResult
-import com.couchbase.client.java.query.AsyncN1qlQueryRow
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import io.vertx.core.Future
 import io.vertx.core.json.DecodeException
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import rx.Observable
-import service.AbstractRequestHandler
 import service.FailingReplyThrowable
 import service.RequestObject
 import service.WebStatusCode
-import user.LoggedInUserData
 import user.LoginUserData
-import user.UserData
 
-class LoginUserHandler : AbstractRequestHandler() {
+class LoginUserHandler : AbstractUserHandler() {
     override val successfulResponseCode = WebStatusCode.OK
 
     override val operationFutureCount: Int = 1
@@ -45,36 +39,7 @@ class LoginUserHandler : AbstractRequestHandler() {
                     }
                 }
                 .flatMap { userData ->
-                    bucket.query(UserService.queries.getUserByUsername(userData.username))
-                            .doOnError { it ->
-                                database.fail(FailingReplyThrowable.databaseError(it))
-                            }
-                            .flatMap { queryResult: AsyncN1qlQueryResult ->
-                                queryResult.rows()
-                            }
-                            .singleOrDefault(null)
-                            .doOnError { ex ->
-                                if (ex is IllegalArgumentException) {
-                                    println("multiple Database Entries for ${userData.username}")
-                                    database.fail(FailingReplyThrowable.corruptedDatabase(ex))
-                                }
-                            }
-                            .map { row: AsyncN1qlQueryRow? ->
-                                try {
-                                    JsonObject(row!!.value().toMap()).mapTo(LoggedInUserData::class.java)
-                                } catch (ex: NullPointerException) {
-                                    throw FailingReplyThrowable.invalidUsername()
-                                }
-                            }
-                            .doOnNext { validData ->
-                                if (!validData.password.equals(userData.password)) {
-                                    throw FailingReplyThrowable.invalidPassword()
-                                }
-                                database.complete()
-                            }
-                            .map { validData: LoggedInUserData ->
-                                User(UserData(validData))
-                            }
+                    checkLoginData(bucket, userData, database)
                 }
                 .doOnNext { user: User ->
                     val tokenUserData = user.createTokenUserDataJson()
