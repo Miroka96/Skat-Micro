@@ -34,7 +34,6 @@ class LoginUserHandler : AbstractRequestHandler() {
         Observable.just(routingContext.bodyAsString)
                 .map { body ->
                     try {
-                        println(body)
                         val login = JsonObject(body).mapTo(LoginUserData::class.java)
                         return@map login
                     } catch (ex: NullPointerException) {
@@ -54,9 +53,15 @@ class LoginUserHandler : AbstractRequestHandler() {
                                 queryResult.rows()
                             }
                             .singleOrDefault(null)
-                            .map { row: AsyncN1qlQueryRow ->
+                            .doOnError { ex ->
+                                if (ex is IllegalArgumentException) {
+                                    println("multiple Database Entries for ${userData.username}")
+                                    database.fail(FailingReplyThrowable.corruptedDatabase(ex))
+                                }
+                            }
+                            .map { row: AsyncN1qlQueryRow? ->
                                 try {
-                                    JsonObject(row.value().toMap()).mapTo(LoggedInUserData::class.java)
+                                    JsonObject(row!!.value().toMap()).mapTo(LoggedInUserData::class.java)
                                 } catch (ex: NullPointerException) {
                                     throw FailingReplyThrowable.invalidUsername()
                                 }
@@ -77,8 +82,7 @@ class LoginUserHandler : AbstractRequestHandler() {
                 }
                 .subscribe(
                         { user: User ->
-                            print("User logged in: ")
-                            println(user)
+                            print("User logged in: ${user.username}")
                         },
                         { ex: Throwable ->
                             val failingReply: FailingReplyThrowable

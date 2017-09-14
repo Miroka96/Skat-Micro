@@ -1,5 +1,6 @@
 import database.CouchbaseAccess
 import io.vertx.core.buffer.Buffer
+import io.vertx.core.json.JsonObject
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.web.client.HttpResponse
 import org.junit.Test
@@ -38,7 +39,8 @@ class LoginUserTest : AbstractServiceTest() {
         val request = client.post(port, host, uri)
         val loginData = LoginUserData.correctData.copy("")
         loginData.password = "invalid"
-        val buffer = Buffer.buffer()
+        val loginDataJson = JsonObject.mapFrom(loginData).toString()
+        val buffer = Buffer.buffer(loginDataJson)
         request.sendBuffer(buffer,
                 context.asyncAssertSuccess { response: HttpResponse<Buffer> ->
                     context.assertEquals(response.statusCode(), WebStatusCode.UNAUTHORIZED.code)

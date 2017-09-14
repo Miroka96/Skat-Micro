@@ -39,14 +39,14 @@ data class LoginUserData(
 }
 
 data class LoggedInUserData(
-        override var id: Int,
-        override var username: String,
-        override var password: String
+        override var id: Int = 0,
+        override var username: String = "",
+        override var password: String = ""
 ) : ILoggedInUserData {
 
     companion object {
         val template by lazy {
-            LoggedInUserData(0, "", "")
+            LoggedInUserData()
         }
     }
 }

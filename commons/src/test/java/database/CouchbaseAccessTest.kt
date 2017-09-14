@@ -1,5 +1,6 @@
 package database
 
+import AbstractDatabaseTest
 import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
@@ -10,12 +11,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 
-class CouchbaseAccessTest {
-    var host = "172.17.0.2"
-    var bucketname = "default"
-    var bucketpassword = ""
+class CouchbaseAccessTest : AbstractDatabaseTest() {
 
-    var db = CouchbaseAccess(host, bucketname, bucketpassword)
     var testKey = "CouchbaseAccessTest"
     var testJson = "{\"name\":\"Mirko\",\"age\":20}"
 

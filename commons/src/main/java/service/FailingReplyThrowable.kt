@@ -89,6 +89,7 @@ class FailingReplyThrowable(
 
 
         fun databaseError(throwable: Throwable) = FailingReplyThrowable(throwable, WebStatusCode.SERVICE_UNAVAILABLE)
+        fun corruptedDatabase(throwable: Throwable) = FailingReplyThrowable(throwable, WebStatusCode.INTERNAL_ERROR)
 
         fun emptyBody(throwable: Throwable, correctData: JsonObject): FailingReplyThrowable =
                 malformedRequest(throwable, correctData, null)
