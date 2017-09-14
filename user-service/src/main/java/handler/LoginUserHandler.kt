@@ -28,8 +28,7 @@ class LoginUserHandler : AbstractUserHandler() {
         Observable.just(routingContext.bodyAsString)
                 .map { body ->
                     try {
-                        val login = JsonObject(body).mapTo(LoginUserData::class.java)
-                        return@map login
+                        JsonObject(body).mapTo(LoginUserData::class.java)
                     } catch (ex: NullPointerException) {
                         throw FailingReplyThrowable.emptyBody(ex, LoginUserData.correctDataJsonObject)
                     } catch (ex: DecodeException) {

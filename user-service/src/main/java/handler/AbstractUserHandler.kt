@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonObject
 import rx.Observable
 import service.AbstractRequestHandler
 import service.FailingReplyThrowable
+import user.IMinimalUserData
 import user.LoggedInUserData
 import user.LoginUserData
 import user.UserData
@@ -18,7 +19,7 @@ abstract class AbstractUserHandler : AbstractRequestHandler() {
 
     fun queryLoggedInUserData(
             bucket: AsyncBucket,
-            userData: LoginUserData,
+            userData: IMinimalUserData,
             database: Future<out Any>
     ): Observable<LoggedInUserData> {
         return bucket.query(UserService.queries.getUserByUsername(userData.username))
@@ -29,17 +30,20 @@ abstract class AbstractUserHandler : AbstractRequestHandler() {
                     queryResult.rows()
                 }
                 .singleOrDefault(null)
-                .doOnError { ex ->
+                .onErrorReturn { ex ->
                     if (ex is IllegalArgumentException) {
                         println("multiple Database Entries for ${userData.username}")
-                        database.fail(FailingReplyThrowable.corruptedDatabase(ex))
+                        val failingReply = FailingReplyThrowable.corruptedDatabase(ex)
+                        database.fail(failingReply)
+                        throw failingReply
                     }
+                    throw ex
                 }
                 .map { row: AsyncN1qlQueryRow? ->
                     try {
                         JsonObject(row!!.value().toMap()).mapTo(LoggedInUserData::class.java)
                     } catch (ex: NullPointerException) {
-                        throw FailingReplyThrowable.invalidUsername()
+                        throw FailingReplyThrowable.invalidUsername(ex)
                     }
                 }
     }

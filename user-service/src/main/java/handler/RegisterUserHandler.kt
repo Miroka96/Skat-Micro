@@ -9,14 +9,14 @@ import io.vertx.core.json.DecodeException
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import rx.Observable
-import service.AbstractRequestHandler
 import service.FailingReplyThrowable
 import service.RequestObject
 import service.WebStatusCode
+import user.LoggedInUserData
 import user.RegisterUserData
 import user.UserData
 
-class RegisterUserHandler : AbstractRequestHandler() {
+class RegisterUserHandler : AbstractUserHandler() {
     override val operationFutureCount: Int = 1
     override val needsDatabaseConnection = true
 
@@ -28,6 +28,7 @@ class RegisterUserHandler : AbstractRequestHandler() {
 
     fun registerUser(routingContext: RoutingContext, replyFuture: Future<String>, database: Future<out Any>, bucket: AsyncBucket) {
         //TODO ("check whether the user does already exist")
+        //TODO ("respond with Token")
         Observable.just(routingContext.bodyAsString)
                 .map { body ->
                     try {
@@ -42,6 +43,21 @@ class RegisterUserHandler : AbstractRequestHandler() {
                     } catch (ex: MismatchedInputException) {
                         throw FailingReplyThrowable.malformedRequest(ex, RegisterUserData.correctDataJsonObject, body)
                     }
+                }
+                .flatMap { user: User ->
+                    queryLoggedInUserData(bucket, user, database)
+                            .onErrorReturn { ex ->
+                                if (ex !is FailingReplyThrowable || ex.cause !is NullPointerException) {
+                                    throw ex
+                                }
+                                null
+                            }
+                            .map { databaseUser: LoggedInUserData? ->
+                                if (databaseUser != null) {
+                                    throw FailingReplyThrowable.invalidUsername(IllegalArgumentException("Username already taken"))
+                                }
+                                user
+                            }
                 }
                 .flatMap { user ->
                     bucket.counter(User.latestIdKey(), 1, 1)
