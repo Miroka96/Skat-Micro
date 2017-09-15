@@ -27,7 +27,6 @@ class RegisterUserHandler : AbstractUserHandler() {
     }
 
     fun registerUser(routingContext: RoutingContext, replyFuture: Future<String>, database: Future<out Any>, bucket: AsyncBucket) {
-        //TODO ("check whether the user does already exist")
         //TODO ("respond with Token")
         Observable.just(routingContext.bodyAsString)
                 .map { body ->

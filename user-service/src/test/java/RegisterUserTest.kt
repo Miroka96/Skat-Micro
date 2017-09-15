@@ -1,7 +1,9 @@
+import com.fasterxml.jackson.databind.ObjectMapper
 import database.CouchbaseAccess
 import io.vertx.core.buffer.Buffer
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
+import io.vertx.ext.web.client.HttpRequest
 import io.vertx.ext.web.client.HttpResponse
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,8 +24,10 @@ class RegisterUserTest : AbstractServiceTest() {
 
     @Test
     fun testPost(context: TestContext) {
-        val request = client.post(port, host, uri)
-        val buffer = Buffer.buffer(RegisterUserData.correctDataJson)
+        val request: HttpRequest<Buffer> = client.post(port, host, uri)
+        val data = RegisterUserData.correctData
+        data.username = data.username + (System.currentTimeMillis() / 1000)
+        val buffer = Buffer.buffer(ObjectMapper().writeValueAsString(data))
         request.sendBuffer(buffer,
                 context.asyncAssertSuccess { response: HttpResponse<Buffer> ->
                     context.assertEquals(response.statusCode(), WebStatusCode.CREATED.code)
@@ -34,6 +38,15 @@ class RegisterUserTest : AbstractServiceTest() {
                     } catch (ex: NullPointerException) {
                         context.assertTrue(false)
                     }
+
+                    testReRegistration(context, request, buffer)
+                })
+    }
+
+    fun testReRegistration(context: TestContext, request: HttpRequest<Buffer>, buffer: Buffer) {
+        request.sendBuffer(buffer,
+                context.asyncAssertSuccess { response: HttpResponse<Buffer> ->
+                    context.assertEquals(response.statusCode(), WebStatusCode.UNAUTHORIZED.code)
                 })
     }
 
