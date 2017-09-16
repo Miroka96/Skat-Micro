@@ -2,6 +2,7 @@ import database.AbstractQueries
 import handler.CreateGameHandler
 import handler.JoinGameHandler
 import handler.LeaveGameHandler
+import io.vertx.core.Future
 import io.vertx.ext.web.Router
 import service.AbstractService
 import service.RoutingPath
@@ -18,8 +19,9 @@ class GameService : AbstractService() {
 
     override val queries: AbstractQueries by lazy { GameService.queries }
 
-    override fun customStart() {
+    override fun customStart(continueFuture: Future<Unit>) {
         GameService.queries = GameQueries(db.bucketName)
+        continueFuture.complete()
     }
 
     companion object {

@@ -16,7 +16,7 @@ class User(
     fun createTokenUserDataJson() = dataToJson(createTokenUserData())
 
     companion object : DatabaseAccess {
-        override fun getDbKeyFromId(id: Int) = "skat::user::$id"
-        override fun latestIdKey() = "skat::user::id"
+        override fun getDbKeyFromId(id: Int) = "user::$id"
+        override fun latestIdKey() = "user::id"
     }
 }

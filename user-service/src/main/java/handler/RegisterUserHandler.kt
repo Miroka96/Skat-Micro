@@ -27,7 +27,6 @@ class RegisterUserHandler : AbstractUserHandler() {
     }
 
     fun registerUser(routingContext: RoutingContext, replyFuture: Future<String>, database: Future<out Any>, bucket: AsyncBucket) {
-        //TODO ("respond with Token")
         Observable.just(routingContext.bodyAsString)
                 .map { body ->
                     try {

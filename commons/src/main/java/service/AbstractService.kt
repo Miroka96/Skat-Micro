@@ -3,6 +3,7 @@ package service
 import database.AbstractQueries
 import database.CouchbaseAccess
 import io.vertx.core.AbstractVerticle
+import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
@@ -25,28 +26,84 @@ abstract class AbstractService : AbstractVerticle() {
     lateinit var db: CouchbaseAccess
     abstract val queries: AbstractQueries
 
+    final override fun start(future: Future<Void>) {
+        val initialized = Future.future<Unit>()
+        initialized.setHandler { res: AsyncResult<Unit> ->
+            if (res.succeeded()) {
+                future.complete()
+            } else {
+                res.cause().printStackTrace()
+                println("shutting service down")
+                vertx.close()
+            }
+        }
+        initialize(initialized)
+    }
 
-    final override fun start(fut: Future<Void>) {
+    fun initialize(future: Future<Unit>) {
+        val databaseFinished = Future.future<Unit>()
+        val routingFinished = Future.future<Unit>()
+        val customStartFinished = Future.future<Unit>()
+        val initializationFinished = Future.future<Unit>()
 
-        db = CouchbaseAccess(config())
-        db.checkBucket()
-                .flatMap { bucket ->
-                    bucket.bucketManager()
-                }
-                .flatMap { mgr ->
-                    mgr.createN1qlPrimaryIndex(true, true)
-                    mgr.buildN1qlDeferredIndexes()
-                }
-                .toBlocking()
-                .last()
+        databaseFinished.setHandler { res: AsyncResult<Unit> ->
+            if (res.succeeded()) {
+                initializeRouting(routingFinished)
+            } else {
+                future.fail(res.cause())
+            }
+        }
+        routingFinished.setHandler { res: AsyncResult<Unit> ->
+            if (res.succeeded()) {
+                customStart(customStartFinished)
+            } else {
+                future.fail(res.cause())
+            }
+        }
+        customStartFinished.setHandler { res: AsyncResult<Unit> ->
+            if (res.succeeded()) {
+                initializeWebServer(initializationFinished)
+            } else {
+                future.fail(res.cause())
+            }
+        }
+        initializationFinished.setHandler { res: AsyncResult<Unit> ->
+            future.handle(res)
+        }
+        this.
+                checkCreateDatabaseIndex(databaseFinished)
+    }
 
+
+    private fun checkCreateDatabaseIndex(continueFuture: Future<Unit>) {
+        vertx.executeBlocking<Unit>({ future: Future<Unit> ->
+            db = CouchbaseAccess(config())
+            db.checkBucket()
+                    .flatMap { bucket ->
+                        bucket.bucketManager()
+                    }
+                    .flatMap { mgr ->
+                        mgr.createN1qlPrimaryIndex(true, true)
+                        mgr.buildN1qlDeferredIndexes()
+                    }
+                    .toBlocking()
+                    .last()
+            future.complete()
+        }, { res: AsyncResult<Unit> ->
+            continueFuture.complete()
+        })
+    }
+
+    private fun initializeRouting(continueFuture: Future<Unit>) {
         router.route().handler(BodyHandler.create()) //This is really important if you use routing
         // -> read documentation. If not used the body wont be passed
 
         addRouting(router)
 
-        customStart()
+        continueFuture.complete()
+    }
 
+    private fun initializeWebServer(continueFuture: Future<Unit>) {
         vertx
                 .createHttpServer()
                 .requestHandler(router::accept)
@@ -57,9 +114,9 @@ abstract class AbstractService : AbstractVerticle() {
                         config().getInteger("http.port", defaultPort)
                 ) { result ->
                     if (result.succeeded()) {
-                        fut.complete()
+                        continueFuture.complete()
                     } else {
-                        fut.fail(result.cause())
+                        continueFuture.fail(result.cause())
                     }
                 }
     }
@@ -71,7 +128,9 @@ abstract class AbstractService : AbstractVerticle() {
 
     abstract fun addRouting(router: Router)
 
-    open fun customStart() {}
+    open fun customStart(continueFuture: Future<Unit>) {
+        continueFuture.complete()
+    }
     open fun customStop() {}
 
     fun wrapHandler(requestHandler: AbstractRequestHandler): Handler<RoutingContext>

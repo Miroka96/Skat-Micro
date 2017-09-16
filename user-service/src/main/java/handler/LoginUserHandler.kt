@@ -20,6 +20,7 @@ class LoginUserHandler : AbstractUserHandler() {
 
     override val needsDatabaseConnection = true
 
+
     override fun startOperation(requestObject: RequestObject, replyFuture: Future<String>, operationFutures: Array<Future<out Any>>) {
         loginUser(requestObject.routingContext, replyFuture, operationFutures[0], requestObject.bucket!!)
     }
@@ -42,6 +43,7 @@ class LoginUserHandler : AbstractUserHandler() {
                 }
                 .doOnNext { user: User ->
                     val tokenUserData = user.createTokenUserDataJson()
+
                     replyFuture.complete(tokenUserData)
                 }
                 .subscribe(
