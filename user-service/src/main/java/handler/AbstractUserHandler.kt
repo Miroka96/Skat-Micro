@@ -8,12 +8,12 @@ import com.couchbase.client.java.query.AsyncN1qlQueryRow
 import io.vertx.core.Future
 import io.vertx.core.json.JsonObject
 import rx.Observable
-import service.AbstractRequestHandler
-import service.FailingReplyThrowable
-import user.IMinimalUserData
-import user.LoggedInUserData
-import user.LoginUserData
-import user.UserData
+import service.request.AbstractRequestHandler
+import service.response.FailingReplyThrowable
+import service.user.IMinimalUserData
+import service.user.LoggedInUserData
+import service.user.LoginUserData
+import service.user.UserData
 
 abstract class AbstractUserHandler : AbstractRequestHandler() {
 

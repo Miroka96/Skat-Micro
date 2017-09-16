@@ -1,8 +1,8 @@
-import database.AbstractDataWrapper
-import database.DatabaseAccess
-import user.IUserData
-import user.TokenUserData
-import user.UserData
+import service.database.AbstractDataWrapper
+import service.database.DatabaseAccess
+import service.user.IUserData
+import service.user.TokenUserData
+import service.user.UserData
 
 class User(
         var userData: UserData

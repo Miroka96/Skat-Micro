@@ -1,4 +1,3 @@
-import database.CouchbaseAccess
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.unit.TestContext
@@ -6,9 +5,10 @@ import io.vertx.ext.web.client.HttpResponse
 import org.junit.Test
 import service.AbstractService
 import service.RoutingPath
-import service.WebStatusCode
-import user.LoginUserData
-import user.TokenUserData
+import service.database.CouchbaseAccess
+import service.response.WebStatusCode
+import service.user.LoginUserData
+import service.user.TokenUserData
 
 class LoginUserTest : AbstractServiceTest() {
     override val uri: String = RoutingPath.LOGIN_USER.toString()

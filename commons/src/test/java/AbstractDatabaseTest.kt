@@ -1,4 +1,4 @@
-import database.CouchbaseAccess
+import service.database.CouchbaseAccess
 
 abstract class AbstractDatabaseTest {
     val host = "172.17.0.2"

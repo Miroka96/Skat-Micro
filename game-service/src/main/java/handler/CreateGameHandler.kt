@@ -2,11 +2,11 @@ package handler
 
 import com.couchbase.client.java.AsyncBucket
 import com.couchbase.client.java.document.JsonDocument
-import game.Game
 import io.vertx.core.Future
-import service.AbstractRequestHandler
-import service.RequestObject
-import service.WebStatusCode
+import service.request.AbstractRequestHandler
+import service.request.RequestObject
+import service.response.WebStatusCode
+import skat.Game
 
 
 class CreateGameHandler : AbstractRequestHandler() {

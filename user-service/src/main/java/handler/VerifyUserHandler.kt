@@ -1,9 +1,9 @@
 package handler
 
 import io.vertx.core.Future
-import service.AbstractRequestHandler
-import service.RequestObject
-import service.WebStatusCode
+import service.request.AbstractRequestHandler
+import service.request.RequestObject
+import service.response.WebStatusCode
 
 class VerifyUserHandler : AbstractRequestHandler() {
     override val successfulResponseCode = WebStatusCode.OK

@@ -3,7 +3,7 @@ import com.couchbase.client.java.query.AsyncN1qlQueryRow
 import com.couchbase.client.java.query.Select
 import com.couchbase.client.java.query.dsl.Expression
 import org.junit.Test
-import user.LoggedInUserData
+import service.user.LoggedInUserData
 
 class UserDatabaseTest : AbstractDatabaseTest() {
 

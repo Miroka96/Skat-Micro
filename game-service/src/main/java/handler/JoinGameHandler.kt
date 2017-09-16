@@ -1,10 +1,13 @@
 package handler
 
 import io.vertx.core.Future
-import service.AbstractRequestHandler
-import service.RequestObject
+import service.request.AbstractRequestHandler
+import service.request.RequestObject
+import service.response.WebStatusCode
 
 class JoinGameHandler : AbstractRequestHandler() {
+    override val successfulResponseCode: WebStatusCode
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val operationFutureCount: Int
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 

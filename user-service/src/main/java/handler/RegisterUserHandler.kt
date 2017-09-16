@@ -9,12 +9,12 @@ import io.vertx.core.json.DecodeException
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import rx.Observable
-import service.FailingReplyThrowable
-import service.RequestObject
-import service.WebStatusCode
-import user.LoggedInUserData
-import user.RegisterUserData
-import user.UserData
+import service.request.RequestObject
+import service.response.FailingReplyThrowable
+import service.response.WebStatusCode
+import service.user.LoggedInUserData
+import service.user.RegisterUserData
+import service.user.UserData
 
 class RegisterUserHandler : AbstractUserHandler() {
     override val operationFutureCount: Int = 1

@@ -1,15 +1,23 @@
 package service
 
-import database.AbstractQueries
-import database.CouchbaseAccess
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.auth.User
+import io.vertx.ext.auth.jwt.JWTAuth
+import io.vertx.ext.auth.jwt.JWTOptions
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
+import service.database.AbstractQueries
+import service.database.CouchbaseAccess
+import service.jwt.KeyStoreManager
+import service.request.AbstractRequestHandler
+import service.request.RequestHandlerWrapper
+import java.nio.file.NoSuchFileException
+import java.security.UnrecoverableKeyException
 
 
 abstract class AbstractService : AbstractVerticle() {
@@ -25,6 +33,7 @@ abstract class AbstractService : AbstractVerticle() {
 
     lateinit var db: CouchbaseAccess
     abstract val queries: AbstractQueries
+    lateinit var authProvider: JWTAuth
 
     final override fun start(future: Future<Void>) {
         val initialized = Future.future<Unit>()
@@ -33,21 +42,30 @@ abstract class AbstractService : AbstractVerticle() {
                 future.complete()
             } else {
                 res.cause().printStackTrace()
-                println("shutting service down")
-                vertx.close()
+                future.fail("shutting service down")
             }
         }
         initialize(initialized)
     }
 
     fun initialize(future: Future<Unit>) {
+        val authProviderFinished = Future.future<Unit>()
         val databaseFinished = Future.future<Unit>()
         val routingFinished = Future.future<Unit>()
         val customStartFinished = Future.future<Unit>()
         val initializationFinished = Future.future<Unit>()
 
+        authProviderFinished.setHandler { res: AsyncResult<Unit> ->
+            if (res.succeeded()) {
+                println("Deployed Authentication Provider")
+                checkCreateDatabaseIndex(databaseFinished)
+            } else {
+                future.fail(res.cause())
+            }
+        }
         databaseFinished.setHandler { res: AsyncResult<Unit> ->
             if (res.succeeded()) {
+                println("Deployed Database Connection")
                 initializeRouting(routingFinished)
             } else {
                 future.fail(res.cause())
@@ -55,6 +73,7 @@ abstract class AbstractService : AbstractVerticle() {
         }
         routingFinished.setHandler { res: AsyncResult<Unit> ->
             if (res.succeeded()) {
+                println("Deployed Routing Handlers")
                 customStart(customStartFinished)
             } else {
                 future.fail(res.cause())
@@ -62,6 +81,7 @@ abstract class AbstractService : AbstractVerticle() {
         }
         customStartFinished.setHandler { res: AsyncResult<Unit> ->
             if (res.succeeded()) {
+                println("Deployed Custom Service Scripts")
                 initializeWebServer(initializationFinished)
             } else {
                 future.fail(res.cause())
@@ -70,10 +90,52 @@ abstract class AbstractService : AbstractVerticle() {
         initializationFinished.setHandler { res: AsyncResult<Unit> ->
             future.handle(res)
         }
-        this.
-                checkCreateDatabaseIndex(databaseFinished)
+
+        initializeAuthProvider(authProviderFinished)
     }
 
+    open val createKeyStorePermission = false
+
+    private fun initializeAuthProvider(continueFuture: Future<Unit>) {
+        vertx.executeBlocking<Unit>({ future ->
+            try {
+                val keyStoreManager = KeyStoreManager(vertx, conf)
+                if (createKeyStorePermission) {
+                    authProvider = keyStoreManager.getJWTAuthProvider()
+                } else {
+                    authProvider = keyStoreManager.getJWTAuthProviderByRead()
+                }
+                checkAuthProvider(future)
+            } catch (keyEx: UnrecoverableKeyException) {
+                future.fail(keyEx)
+            } catch (nsfEx: NoSuchFileException) {
+                future.fail(nsfEx)
+            } catch (ex: Exception) {
+                println("Unknown Exception while reading Keystore")
+                future.fail(ex)
+            }
+        }, { res: AsyncResult<Unit> ->
+            continueFuture.handle(res)
+        })
+    }
+
+    private fun checkAuthProvider(continueFuture: Future<Unit>) {
+        val token: String = authProvider.generateToken(
+                JsonObject().put("key", "test")
+                , JWTOptions()
+        )
+
+        authProvider.authenticate(
+                JsonObject().put("jwt", token)
+        ) { res: AsyncResult<User> ->
+            if (res.succeeded()) {
+                continueFuture.complete()
+            } else {
+                println("JWT Test failed")
+                continueFuture.fail(res.cause())
+            }
+        }
+    }
 
     private fun checkCreateDatabaseIndex(continueFuture: Future<Unit>) {
         vertx.executeBlocking<Unit>({ future: Future<Unit> ->
@@ -99,7 +161,6 @@ abstract class AbstractService : AbstractVerticle() {
         // -> read documentation. If not used the body wont be passed
 
         addRouting(router)
-
         continueFuture.complete()
     }
 
@@ -133,8 +194,7 @@ abstract class AbstractService : AbstractVerticle() {
     }
     open fun customStop() {}
 
-    fun wrapHandler(requestHandler: AbstractRequestHandler): Handler<RoutingContext>
+    protected fun wrapHandler(requestHandler: AbstractRequestHandler): Handler<RoutingContext>
             = RequestHandlerWrapper(requestHandler, db).wrapHandler()
-
 
 }

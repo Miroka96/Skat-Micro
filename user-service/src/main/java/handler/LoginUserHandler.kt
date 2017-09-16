@@ -8,10 +8,10 @@ import io.vertx.core.json.DecodeException
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
 import rx.Observable
-import service.FailingReplyThrowable
-import service.RequestObject
-import service.WebStatusCode
-import user.LoginUserData
+import service.request.RequestObject
+import service.response.FailingReplyThrowable
+import service.response.WebStatusCode
+import service.user.LoginUserData
 
 class LoginUserHandler : AbstractUserHandler() {
     override val successfulResponseCode = WebStatusCode.OK
@@ -48,7 +48,7 @@ class LoginUserHandler : AbstractUserHandler() {
                 }
                 .subscribe(
                         { user: User ->
-                            print("User logged in: ${user.username}")
+                            println("User logged in: ${user.username}")
                         },
                         { ex: Throwable ->
                             val failingReply: FailingReplyThrowable

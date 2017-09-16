@@ -1,4 +1,3 @@
-import database.AbstractQueries
 import handler.CreateGameHandler
 import handler.JoinGameHandler
 import handler.LeaveGameHandler
@@ -6,6 +5,7 @@ import io.vertx.core.Future
 import io.vertx.ext.web.Router
 import service.AbstractService
 import service.RoutingPath
+import service.database.AbstractQueries
 
 class GameService : AbstractService() {
 

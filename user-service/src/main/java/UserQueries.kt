@@ -6,8 +6,8 @@ import com.couchbase.client.java.query.Select.select
 import com.couchbase.client.java.query.consistency.ScanConsistency
 import com.couchbase.client.java.query.dsl.Expression.i
 import com.couchbase.client.java.query.dsl.Expression.x
-import database.AbstractQueries
-import user.LoggedInUserData
+import service.database.AbstractQueries
+import service.user.LoggedInUserData
 
 class UserQueries(bucketname: String) : AbstractQueries(bucketname) {
     private val prepared = N1qlParams.build().adhoc(false)

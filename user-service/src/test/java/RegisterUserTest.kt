@@ -1,5 +1,4 @@
 import com.fasterxml.jackson.databind.ObjectMapper
-import database.CouchbaseAccess
 import io.vertx.core.buffer.Buffer
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
@@ -9,9 +8,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import service.AbstractService
 import service.RoutingPath
-import service.WebStatusCode
-import user.RegisterUserData
-import user.TokenUserData
+import service.database.CouchbaseAccess
+import service.response.WebStatusCode
+import service.user.RegisterUserData
+import service.user.TokenUserData
 
 
 @RunWith(VertxUnitRunner::class)
