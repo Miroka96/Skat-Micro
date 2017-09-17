@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import io.vertx.core.Future
 import io.vertx.core.json.DecodeException
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.auth.jwt.JWTAuth
+import io.vertx.ext.auth.jwt.JWTOptions
 import io.vertx.ext.web.RoutingContext
 import rx.Observable
 import service.request.RequestObject
@@ -20,12 +22,11 @@ class LoginUserHandler : AbstractUserHandler() {
 
     override val needsDatabaseConnection = true
 
-
     override fun startOperation(requestObject: RequestObject, replyFuture: Future<String>, operationFutures: Array<Future<out Any>>) {
-        loginUser(requestObject.routingContext, replyFuture, operationFutures[0], requestObject.bucket!!)
+        loginUser(requestObject.routingContext, replyFuture, operationFutures[0], requestObject.bucket!!, requestObject.service.authProvider, requestObject.service.tokenOptions)
     }
 
-    fun loginUser(routingContext: RoutingContext, replyFuture: Future<String>, database: Future<out Any>, bucket: AsyncBucket) {
+    fun loginUser(routingContext: RoutingContext, replyFuture: Future<String>, database: Future<out Any>, bucket: AsyncBucket, authProvider: JWTAuth, authOptions: JWTOptions) {
         Observable.just(routingContext.bodyAsString)
                 .map { body ->
                     try {
@@ -42,9 +43,14 @@ class LoginUserHandler : AbstractUserHandler() {
                     checkLoginData(bucket, userData, database)
                 }
                 .doOnNext { user: User ->
-                    val tokenUserData = user.createTokenUserDataJson()
+                    val tokenUserData = user.createTokenUserData()
+                    val tokenJson = JsonObject.mapFrom(tokenUserData)
 
-                    replyFuture.complete(tokenUserData)
+                    val token: String = authProvider.generateToken(tokenJson, authOptions)
+
+                    val tokenReply = JsonObject()
+                            .put("token", token)
+                    replyFuture.complete(tokenReply.encode())
                 }
                 .subscribe(
                         { user: User ->

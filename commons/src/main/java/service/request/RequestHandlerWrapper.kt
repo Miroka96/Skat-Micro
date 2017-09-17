@@ -3,20 +3,25 @@ package service.request
 import com.couchbase.client.java.document.JsonDocument
 import io.vertx.core.Handler
 import io.vertx.ext.web.RoutingContext
+import service.AbstractService
 import service.database.CouchbaseAccess
 import skat.Game
 import skat.model.GameData
 
 class RequestHandlerWrapper(
-        var requestHandler: AbstractRequestHandler,
-        var db: CouchbaseAccess
+        val requestHandler: AbstractRequestHandler,
+        val db: CouchbaseAccess,
+        val service: AbstractService
 ) {
 
     fun wrapHandler() = Handler<RoutingContext>
     { routingContext ->
         //TODO fill all needed arguments
 
-        val request = RequestObject(routingContext, requestHandler)
+        val request = RequestObject(
+                routingContext,
+                requestHandler,
+                service)
 
         createDatabaseConnection(
                 getGameFromDatabase(

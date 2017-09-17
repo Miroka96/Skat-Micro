@@ -11,8 +11,12 @@ import java.nio.file.NoSuchFileException
 import java.security.KeyStore
 import java.security.UnrecoverableKeyException
 
-class KeyStoreManager(val vertx: Vertx, val config: JsonObject) {
+class KeyStoreManager(
+        val vertx: Vertx,
+        val config: JsonObject
+) {
     val keystoreKey = "keyStore"
+
     val defaultPath = "keystore.jceks"
     val defaultType = "jceks"
     val defaultPassword = "secretAsFuq"
@@ -86,6 +90,6 @@ class KeyStoreManager(val vertx: Vertx, val config: JsonObject) {
 
     private fun initializeKeyStore(type: String = defaultType, password: String = defaultPassword, path: String = defaultPath) {
         val keytool = KeyTool()
-        keytool.initialize(path, type, password)
+        keytool.initializeAll(path, type, password)
     }
 }

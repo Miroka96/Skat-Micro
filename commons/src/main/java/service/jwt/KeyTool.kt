@@ -2,114 +2,68 @@ package service.jwt
 
 class KeyTool {
 
-    fun initialize(
+    fun initializeAll(
             keyStore: String = "keystore.jceks",
             storeType: String = "jceks",
-            password: String = "secret",
+            password: String,
             dname: String = "CN=,OU=,O=,L=,ST=,C=",
             validity: Int = 360
     ) {
-        generateSecKey(
-                keyStore,
-                storeType,
-                password,
-                "HMacSHA256",
-                2048,
-                "HS256",
-                password
-        )
-        generateSecKey(
-                keyStore,
-                storeType,
-                password,
-                "HMacSHA384",
-                2048,
-                "HS384",
-                password
-        )
-        generateSecKey(
-                keyStore,
-                storeType,
-                password,
-                "HMacSHA512",
-                2048,
-                "HS512",
-                password
-        )
+        for (algorithm in JWTAlgorithms.values()) {
+            initialize(
+                    keyStore,
+                    storeType,
+                    password,
+                    dname,
+                    validity,
+                    algorithm
+            )
+        }
+    }
 
-        generateKey(
-                keyStore,
-                storeType,
-                password,
-                "RSA",
-                2048,
-                "RS256",
-                password,
-                "SHA256withRSA",
-                dname,
-                validity
-        )
-        generateKey(
-                keyStore,
-                storeType,
-                password,
-                "RSA",
-                2048,
-                "RS384",
-                password,
-                "SHA384withRSA",
-                dname,
-                validity
-        )
-        generateKey(
-                keyStore,
-                storeType,
-                password,
-                "RSA",
-                2048,
-                "RS512",
-                password,
-                "SHA512withRSA",
-                dname,
-                validity
-        )
-
-        generateKeyPair(
-                keyStore,
-                storeType,
-                password,
-                "EC",
-                256,
-                "ES256",
-                password,
-                "SHA256withECDSA",
-                dname,
-                validity
-        )
-        generateKeyPair(
-                keyStore,
-                storeType,
-                password,
-                "EC",
-                256,
-                "ES384",
-                password,
-                "SHA384withECDSA",
-                dname,
-                validity
-        )
-        generateKeyPair(
-                keyStore,
-                storeType,
-                password,
-                "EC",
-                256,
-                "ES512",
-                password,
-                "SHA512withECDSA",
-                dname,
-                validity
-        )
+    fun initialize(
+            keyStore: String = "keystore.jceks",
+            storeType: String = "jceks",
+            password: String,
+            dname: String = "CN=,OU=,O=,L=,ST=,C=",
+            validity: Int = 360,
+            algorithm: JWTAlgorithms
+    ) {
+        when (algorithm.type) {
+            "HS" -> generateSecKey(
+                    keyStore,
+                    storeType,
+                    password,
+                    algorithm.keyAlg,
+                    algorithm.keySize,
+                    algorithm.alias,
+                    password
+            )
+            "RS" -> generateKey(
+                    keyStore,
+                    storeType,
+                    password,
+                    algorithm.keyAlg,
+                    algorithm.keySize,
+                    algorithm.alias,
+                    password,
+                    algorithm.sigAlg,
+                    dname,
+                    validity
+            )
+            "ES" -> generateKeyPair(
+                    keyStore,
+                    storeType,
+                    password,
+                    algorithm.keyAlg,
+                    algorithm.keySize,
+                    algorithm.alias,
+                    password,
+                    algorithm.sigAlg,
+                    dname,
+                    validity
+            )
+        }
     }
 
     fun generateSecKey(

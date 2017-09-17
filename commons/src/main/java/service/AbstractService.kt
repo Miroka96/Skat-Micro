@@ -27,13 +27,18 @@ abstract class AbstractService : AbstractVerticle() {
         config()
     }
 
-    val router: Router by lazy {
+    protected val router: Router by lazy {
         Router.router(vertx)
     }
 
-    lateinit var db: CouchbaseAccess
+    protected lateinit var db: CouchbaseAccess
     abstract val queries: AbstractQueries
     lateinit var authProvider: JWTAuth
+
+    val tokenOptions by lazy {
+        JWTOptions().setAlgorithm(conf.getString("jwtAlgorithm", "RS256"))
+                .setExpiresInMinutes(60)
+    }
 
     final override fun start(future: Future<Void>) {
         val initialized = Future.future<Unit>()
@@ -48,7 +53,7 @@ abstract class AbstractService : AbstractVerticle() {
         initialize(initialized)
     }
 
-    fun initialize(future: Future<Unit>) {
+    private fun initialize(future: Future<Unit>) {
         val authProviderFinished = Future.future<Unit>()
         val databaseFinished = Future.future<Unit>()
         val routingFinished = Future.future<Unit>()
@@ -94,7 +99,7 @@ abstract class AbstractService : AbstractVerticle() {
         initializeAuthProvider(authProviderFinished)
     }
 
-    open val createKeyStorePermission = false
+    protected open val createKeyStorePermission = false
 
     private fun initializeAuthProvider(continueFuture: Future<Unit>) {
         vertx.executeBlocking<Unit>({ future ->
@@ -122,9 +127,9 @@ abstract class AbstractService : AbstractVerticle() {
     private fun checkAuthProvider(continueFuture: Future<Unit>) {
         val token: String = authProvider.generateToken(
                 JsonObject().put("key", "test")
-                , JWTOptions()
+                , tokenOptions
         )
-
+        println(token)
         authProvider.authenticate(
                 JsonObject().put("jwt", token)
         ) { res: AsyncResult<User> ->
@@ -187,14 +192,15 @@ abstract class AbstractService : AbstractVerticle() {
         customStop()
     }
 
-    abstract fun addRouting(router: Router)
+    protected abstract fun addRouting(router: Router)
 
-    open fun customStart(continueFuture: Future<Unit>) {
+    protected open fun customStart(continueFuture: Future<Unit>) {
         continueFuture.complete()
     }
-    open fun customStop() {}
+
+    protected open fun customStop() {}
 
     protected fun wrapHandler(requestHandler: AbstractRequestHandler): Handler<RoutingContext>
-            = RequestHandlerWrapper(requestHandler, db).wrapHandler()
+            = RequestHandlerWrapper(requestHandler, db, this).wrapHandler()
 
 }

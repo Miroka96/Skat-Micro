@@ -4,12 +4,14 @@ import com.couchbase.client.java.AsyncBucket
 import io.vertx.ext.web.RoutingContext
 import io.vertx.rxjava.core.CompositeFuture
 import io.vertx.rxjava.core.Future
+import service.AbstractService
 import skat.Game
 
 
 data class RequestObject(
-        var routingContext: RoutingContext,
-        private var requestHandler: AbstractRequestHandler
+        val routingContext: RoutingContext,
+        private var requestHandler: AbstractRequestHandler,
+        val service: AbstractService
 ) {
 
     var needsDatabaseConnectionFuture = Future.future<Unit>()
