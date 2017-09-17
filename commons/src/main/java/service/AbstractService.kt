@@ -22,11 +22,15 @@ import java.util.*
 
 
 abstract class AbstractService : AbstractVerticle() {
-    abstract val serviceName: String
-    open val defaultPort = 8080
 
     val servicesKey = "services"
+    abstract val serviceName: String
+
     val portKey = "port"
+    open val defaultPort = 8080
+
+    val jwtPortKey = "jwtPort"
+    protected val defaultJWTPort = 8090
 
     val jwtAlgorithmKey = "jwtAlgorithm"
 
@@ -50,8 +54,13 @@ abstract class AbstractService : AbstractVerticle() {
         val services = configInsertIfNotExist(res, servicesKey, defaultServices)
         val defaultService = JsonObject()
         val service = configInsertIfNotExist(services, serviceName, defaultService)
+
         configInsertIfNotExist(service, portKey, defaultPort)
 
+        configInsertIfNotExist(services, jwtPortKey, defaultJWTPort)
+
+        println(res.encodePrettily())
+        println()
         res
     }
 
@@ -202,7 +211,7 @@ abstract class AbstractService : AbstractVerticle() {
         } catch (ex: NullPointerException) {
             println("No public key found for algorithm '${tokenOptions.algorithm}'")
         }
-
+        println()
 
         authProvider.authenticate(
                 JsonObject().put("jwt", token)

@@ -5,7 +5,7 @@ import service.request.AbstractRequestHandler
 import service.request.RequestObject
 import service.response.WebStatusCode
 
-class VerifyUserHandler : AbstractRequestHandler() {
+class VerifyTokenHandler : AbstractRequestHandler() {
     override val successfulResponseCode = WebStatusCode.OK
 
     override val operationFutureCount: Int = 0

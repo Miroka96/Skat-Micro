@@ -1,6 +1,6 @@
 import handler.LoginUserHandler
 import handler.RegisterUserHandler
-import handler.VerifyUserHandler
+import handler.VerifyTokenHandler
 import io.vertx.core.Future
 import io.vertx.ext.web.Router
 import service.AbstractService
@@ -12,12 +12,12 @@ class UserService : AbstractService() {
 
     override val serviceName: String = "user"
 
-    override val defaultPort = 8090
+    override val defaultPort = defaultJWTPort
 
     override fun addRouting(router: Router) {
         router.post(RoutingPath.LOGIN_USER.toString()).handler(wrapHandler(LoginUserHandler()))
         router.post(RoutingPath.REGISTER_USER.toString()).handler(wrapHandler(RegisterUserHandler()))
-        router.get(RoutingPath.VERIFY_USER.toString()).handler(wrapHandler(VerifyUserHandler()))
+        router.get(RoutingPath.VERIFY_USER.toString()).handler(wrapHandler(VerifyTokenHandler()))
     }
 
     override val queries: AbstractQueries by lazy { UserService.queries }
