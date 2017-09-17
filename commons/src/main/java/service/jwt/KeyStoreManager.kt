@@ -4,32 +4,31 @@ import io.vertx.core.Vertx
 import io.vertx.core.file.FileSystemException
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.jwt.JWTAuth
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.lang.RuntimeException
 import java.nio.file.NoSuchFileException
 import java.security.KeyStore
+import java.security.PublicKey
 import java.security.UnrecoverableKeyException
 
 class KeyStoreManager(
         val vertx: Vertx,
-        val config: JsonObject
+        val config: JsonObject, // root config needed
+        val defaultPath: String = config.getJsonObject(keystoreKey).getString(pathKey),
+        val defaultType: String = config.getJsonObject(keystoreKey).getString(typeKey),
+        val defaultPassword: String = config.getJsonObject(keystoreKey).getString(passwordKey)
 ) {
-    val keystoreKey = "keyStore"
-
-    val defaultPath = "keystore.jceks"
-    val defaultType = "jceks"
-    val defaultPassword = "secretAsFuq"
-
     fun getJWTAuthProvider(): JWTAuth {
         try {
             return getJWTAuthProviderByRead()
         } catch (nsfEx: NoSuchFileException) {
             val params = config.getJsonObject(keystoreKey)
 
-            val type = params.getString("type", defaultType)
-            val password = params.getString("password", defaultPassword)
-            val path = params.getString("path", defaultPath)
+            val type = params.getString(typeKey, defaultType)
+            val password = params.getString(passwordKey, defaultPassword)
+            val path = params.getString(pathKey, defaultPath)
 
             createKeyStore(type, password, path)
             initializeKeyStore(type, password, path)
@@ -38,18 +37,7 @@ class KeyStoreManager(
     }
 
     fun getJWTAuthProviderByRead(): JWTAuth {
-        checkConfig()
         return readKeyStore()
-    }
-
-    private fun checkConfig() {
-        if (!config.containsKey(keystoreKey)) {
-            val defaultKeystore = JsonObject()
-                    .put("path", defaultPath)
-                    .put("type", defaultType)
-                    .put("password", defaultPassword)
-            config.put("keyStore", defaultKeystore)
-        }
     }
 
     private fun readKeyStore(): JWTAuth {
@@ -88,8 +76,29 @@ class KeyStoreManager(
         println("Created Keystore File: $path")
     }
 
+    fun loadKeyStore(type: String = defaultType, password: String = defaultPassword, path: String = defaultPath): KeyStore {
+        val ks = KeyStore.getInstance(type)
+        val fis = FileInputStream(path)
+        ks.load(fis, password.toCharArray())
+        fis.close()
+        return ks
+    }
+
+    // throws NullPointerException if 'alias' is invalid
+    fun getPublicKey(keyStore: KeyStore, keyAlias: String): PublicKey {
+        val cert = keyStore.getCertificate(keyAlias)
+        return cert.publicKey
+    }
+
     private fun initializeKeyStore(type: String = defaultType, password: String = defaultPassword, path: String = defaultPath) {
         val keytool = KeyTool()
         keytool.initializeAll(path, type, password)
+    }
+
+    companion object {
+        val keystoreKey = "keyStore"
+        val typeKey = "type"
+        val passwordKey = "password"
+        val pathKey = "path"
     }
 }

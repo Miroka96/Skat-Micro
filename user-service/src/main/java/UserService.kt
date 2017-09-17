@@ -10,6 +10,8 @@ import service.database.AbstractQueries
 
 class UserService : AbstractService() {
 
+    override val serviceName: String = "user"
+
     override val defaultPort = 8090
 
     override fun addRouting(router: Router) {

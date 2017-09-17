@@ -18,13 +18,70 @@ import service.request.AbstractRequestHandler
 import service.request.RequestHandlerWrapper
 import java.nio.file.NoSuchFileException
 import java.security.UnrecoverableKeyException
+import java.util.*
 
 
 abstract class AbstractService : AbstractVerticle() {
+    abstract val serviceName: String
     open val defaultPort = 8080
 
+    val servicesKey = "services"
+    val portKey = "port"
+
+    val jwtAlgorithmKey = "jwtAlgorithm"
+
     val conf: JsonObject by lazy {
-        config()
+        val res = config()
+
+        // complete if not already complete
+        // keystore
+        val defaultKeystore = JsonObject()
+        val keystore = configInsertIfNotExist(res, KeyStoreManager.keystoreKey, defaultKeystore)
+
+        configInsertIfNotExist(keystore, KeyStoreManager.pathKey, "keystore.jceks")
+        configInsertIfNotExist(keystore, KeyStoreManager.typeKey, "jceks")
+        configInsertIfNotExist(keystore, KeyStoreManager.passwordKey, "secretAsFuq")
+
+        // JWT
+        configInsertIfNotExist(res, jwtAlgorithmKey, "RS256")
+
+        //services
+        val defaultServices = JsonObject()
+        val services = configInsertIfNotExist(res, servicesKey, defaultServices)
+        val defaultService = JsonObject()
+        val service = configInsertIfNotExist(services, serviceName, defaultService)
+        configInsertIfNotExist(service, portKey, defaultPort)
+
+        res
+    }
+
+    fun configInsertIfNotExist(config: JsonObject, key: String, value: String): String {
+        if (!config.containsKey(key)) {
+            config.put(key, value)
+            return value
+        }
+        return config.getString(key)
+    }
+
+    fun configInsertIfNotExist(config: JsonObject, key: String, value: JsonObject): JsonObject {
+        if (!config.containsKey(key)) {
+            config.put(key, value)
+            return value
+        }
+        return config.getJsonObject(key)
+    }
+
+    fun configInsertIfNotExist(config: JsonObject, key: String, value: Int): Int {
+        if (!config.containsKey(key)) {
+            config.put(key, value)
+            return value
+        }
+        return config.getInteger(key)
+    }
+
+
+    val serviceConfig: JsonObject by lazy {
+        conf.getJsonObject(servicesKey).getJsonObject(serviceName)
     }
 
     protected val router: Router by lazy {
@@ -33,10 +90,15 @@ abstract class AbstractService : AbstractVerticle() {
 
     protected lateinit var db: CouchbaseAccess
     abstract val queries: AbstractQueries
+
+    val keyStoreManager by lazy {
+        KeyStoreManager(vertx, conf)
+    }
+
     lateinit var authProvider: JWTAuth
 
     val tokenOptions by lazy {
-        JWTOptions().setAlgorithm(conf.getString("jwtAlgorithm", "RS256"))
+        JWTOptions().setAlgorithm(conf.getString(jwtAlgorithmKey))
                 .setExpiresInMinutes(60)
     }
 
@@ -104,7 +166,6 @@ abstract class AbstractService : AbstractVerticle() {
     private fun initializeAuthProvider(continueFuture: Future<Unit>) {
         vertx.executeBlocking<Unit>({ future ->
             try {
-                val keyStoreManager = KeyStoreManager(vertx, conf)
                 if (createKeyStorePermission) {
                     authProvider = keyStoreManager.getJWTAuthProvider()
                 } else {
@@ -129,7 +190,20 @@ abstract class AbstractService : AbstractVerticle() {
                 JsonObject().put("key", "test")
                 , tokenOptions
         )
+        print("Sample Token: ")
         println(token)
+
+        try {
+            val keyStore = keyStoreManager.loadKeyStore()
+            val publicKey = keyStoreManager.getPublicKey(keyStore, tokenOptions.algorithm)
+
+            print("Public Key: ")
+            println(Base64.getEncoder().encodeToString(publicKey.encoded))
+        } catch (ex: NullPointerException) {
+            println("No public key found for algorithm '${tokenOptions.algorithm}'")
+        }
+
+
         authProvider.authenticate(
                 JsonObject().put("jwt", token)
         ) { res: AsyncResult<User> ->
@@ -202,5 +276,4 @@ abstract class AbstractService : AbstractVerticle() {
 
     protected fun wrapHandler(requestHandler: AbstractRequestHandler): Handler<RoutingContext>
             = RequestHandlerWrapper(requestHandler, db, this).wrapHandler()
-
 }

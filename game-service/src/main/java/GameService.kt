@@ -9,6 +9,8 @@ import service.database.AbstractQueries
 
 class GameService : AbstractService() {
 
+    override val serviceName: String = "game"
+
     override val defaultPort = 8091
 
     override fun addRouting(router: Router) {
