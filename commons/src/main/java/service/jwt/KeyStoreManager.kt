@@ -16,19 +16,19 @@ import java.security.UnrecoverableKeyException
 class KeyStoreManager(
         val vertx: Vertx,
         val config: JsonObject, // root config needed
-        val defaultPath: String = config.getJsonObject(keystoreKey).getString(pathKey),
-        val defaultType: String = config.getJsonObject(keystoreKey).getString(typeKey),
-        val defaultPassword: String = config.getJsonObject(keystoreKey).getString(passwordKey)
+        val defaultPath: String = config.getJsonObject(KEYSTORE).getString(PATH),
+        val defaultType: String = config.getJsonObject(KEYSTORE).getString(TYPE),
+        val defaultPassword: String = config.getJsonObject(KEYSTORE).getString(PASSWORD)
 ) {
     fun getJWTAuthProvider(): JWTAuth {
         try {
             return getJWTAuthProviderByRead()
         } catch (nsfEx: NoSuchFileException) {
-            val params = config.getJsonObject(keystoreKey)
+            val params = config.getJsonObject(KEYSTORE)
 
-            val type = params.getString(typeKey, defaultType)
-            val password = params.getString(passwordKey, defaultPassword)
-            val path = params.getString(pathKey, defaultPath)
+            val type = params.getString(TYPE, defaultType)
+            val password = params.getString(PASSWORD, defaultPassword)
+            val path = params.getString(PATH, defaultPath)
 
             createKeyStore(type, password, path)
             initializeKeyStore(type, password, path)
@@ -76,6 +76,7 @@ class KeyStoreManager(
         println("Created Keystore File: $path")
     }
 
+
     fun loadKeyStore(type: String = defaultType, password: String = defaultPassword, path: String = defaultPath): KeyStore {
         val ks = KeyStore.getInstance(type)
         val fis = FileInputStream(path)
@@ -96,9 +97,12 @@ class KeyStoreManager(
     }
 
     companion object {
-        val keystoreKey = "keyStore"
-        val typeKey = "type"
-        val passwordKey = "password"
-        val pathKey = "path"
+        val KEYSTORE = "keyStore"
+        val TYPE = "type"
+        val PASSWORD = "password"
+        val PATH = "path"
+
+        val PUBLIC_KEY = "public-key"
+        val JWT = "jwt"
     }
 }

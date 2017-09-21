@@ -2,6 +2,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.unit.TestContext
 import org.junit.Test
+import service.jwt.KeyStoreManager
 
 class AuthenticationTokenTest : AbstractVertxTest() {
 
@@ -11,10 +12,10 @@ class AuthenticationTokenTest : AbstractVertxTest() {
         val token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJrZXkiOiJ0ZXN0IiwiaWF0IjoxNTA2MDEyMDMzLCJleHAiOjE1MDYwMTU2MzN9.Sv_YPatMHlAbtd5lzY73MP7xPcyZ0FzKp-wrt3IlYc0rwFVFsRybbZJluLUE8qGD4Sq616WdLlDJPgX6vLYVN8_1rIme999nWzU7UqnSkBgwWDDJVZUYWwcSj4beDkFqizyi9gOMXRpElaWraNvwSo1JZ8yEIbozSZyBLyDNNfdVbkBencac6blaSf3z65gOrzVa6yJAQA-Q3dDegNnRFR1aCpRjq65DAKXIpLjQcTJkqPgHax88JCpZnoHSvXLoYeBHVBCzwzaOKA47Q4isQOUrrCWDCxuwoQR1ViXUSM2w6q2q2Cqsyj0sZHkFJmJytiRpIMUc7FBGkpoZv89OoA"
 
         val authConf = JsonObject()
-                .put("public-key", pubKey)
+                .put(KeyStoreManager.PUBLIC_KEY, pubKey)
         val authProvider = JWTAuth.create(vertx, authConf)
         authProvider.authenticate(
-                JsonObject().put("jwt", token),
+                JsonObject().put(KeyStoreManager.JWT, token),
                 context.asyncAssertSuccess()
         )
     }
@@ -25,10 +26,10 @@ class AuthenticationTokenTest : AbstractVertxTest() {
         val token = "9.eyJrZXkiOiJ0ZXN0IiwiaWF0IjoxNTA2MDEyMDMzLCJleHAiOjE1MDYwMTU2MzN9.Sv_YPatMHlAbtd5lzY73MP7xPcyZ0FzKp-wrt3IlYc0rwFVFsRybbZJluLUE8qGD4Sq616WdLlDJPgX6vLYVN8_1rIme999nWzU7UqnSkBgwWDDJVZUYWwcSj4beDkFqizyi9gOMXRpElaWraNvwSo1JZ8yEIbozSZyBLyDNNfdVbkBencac6blaSf3z65gOrzVa6yJAQA-Q3dDegNnRFR1aCpRjq65DAKXIpLjQcTJkqPgHax88JCpZnoHSvXLoYeBHVBCzwzaOKA47Q4isQOUrrCWDCxuwoQR1ViXUSM2w6q2q2Cqsyj0sZHkFJmJytiRpIMUc7FBGkpoZv89OoA"
 
         val authConf = JsonObject()
-                .put("public-key", pubKey)
+                .put(KeyStoreManager.PUBLIC_KEY, pubKey)
         val authProvider = JWTAuth.create(vertx, authConf)
         authProvider.authenticate(
-                JsonObject().put("jwt", token),
+                JsonObject().put(KeyStoreManager.JWT, token),
                 context.asyncAssertFailure()
         )
     }

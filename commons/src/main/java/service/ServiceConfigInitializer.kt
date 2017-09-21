@@ -9,11 +9,11 @@ class ServiceConfigInitializer(val config: JsonObject,
 
     fun initializeKeystore(): ServiceConfigInitializer {
         val defaultKeystore = JsonObject()
-        val keystore = configInsertIfNotExist(config, KeyStoreManager.keystoreKey, defaultKeystore)
+        val keystore = configInsertIfNotExist(config, KeyStoreManager.KEYSTORE, defaultKeystore)
 
-        configInsertIfNotExist(keystore, KeyStoreManager.pathKey, "keystore.jceks")
-        configInsertIfNotExist(keystore, KeyStoreManager.typeKey, "jceks")
-        configInsertIfNotExist(keystore, KeyStoreManager.passwordKey, "secretAsFuq")
+        configInsertIfNotExist(keystore, KeyStoreManager.PATH, "keystore.jceks")
+        configInsertIfNotExist(keystore, KeyStoreManager.TYPE, "jceks")
+        configInsertIfNotExist(keystore, KeyStoreManager.PASSWORD, "secretAsFuq")
         return this
     }
 

@@ -1,10 +1,12 @@
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.json.JsonObject
+import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.web.client.HttpResponse
 import org.junit.Test
 import service.AbstractService
 import service.RoutingPath
+import service.jwt.KeyStoreManager
 import service.response.WebStatusCode
 import service.user.LoginUserData
 
@@ -22,15 +24,26 @@ class LoginUserTest : AbstractServiceTest() {
         request.sendBuffer(buffer,
                 context.asyncAssertSuccess { response: HttpResponse<Buffer> ->
                     context.assertEquals(response.statusCode(), WebStatusCode.OK.code)
-                    try {
-                        val res = JsonObject(response.bodyAsString())
-                        println("Got Token: ${res.getString("token")}")
-                        context.assertTrue(true)
-                    } catch (ex: Exception) {
-                        context.assertTrue(false)
-                    }
 
+                    val res = JsonObject(response.bodyAsString())
+                    val token = res.getString("token")
+                    authenticateToken(context, token)
+
+                    context.assertTrue(true)
                 })
+    }
+
+    fun authenticateToken(context: TestContext, token: String) {
+        val request = client.get(port, host, RoutingPath.PUBLIC_KEY.toString())
+        request.send(context.asyncAssertSuccess { response: HttpResponse<Buffer> ->
+            val res = JsonObject(response.bodyAsString())
+            val pubKey = res.getString(KeyStoreManager.PUBLIC_KEY)
+            val authProvider = JWTAuth.create(vertx, res)
+            authProvider.authenticate(
+                    JsonObject().put(KeyStoreManager.JWT, token),
+                    context.asyncAssertSuccess()
+            )
+        })
     }
 
     @Test
