@@ -5,10 +5,8 @@ import io.vertx.ext.web.client.HttpResponse
 import org.junit.Test
 import service.AbstractService
 import service.RoutingPath
-import service.database.CouchbaseAccess
 import service.response.WebStatusCode
 import service.user.LoginUserData
-import service.user.TokenUserData
 
 class LoginUserTest : AbstractServiceTest() {
     override val uri: String = RoutingPath.LOGIN_USER.toString()
@@ -25,12 +23,13 @@ class LoginUserTest : AbstractServiceTest() {
                 context.asyncAssertSuccess { response: HttpResponse<Buffer> ->
                     context.assertEquals(response.statusCode(), WebStatusCode.OK.code)
                     try {
-                        val tokenData = CouchbaseAccess.jsonmapper.readValue(response.bodyAsString(), TokenUserData::class.java)
-                        context.assertEquals(LoginUserData.correctData.username, tokenData.username)
+                        val res = JsonObject(response.bodyAsString())
+                        println("Got Token: ${res.getString("token")}")
                         context.assertTrue(true)
-                    } catch (ex: NullPointerException) {
+                    } catch (ex: Exception) {
                         context.assertTrue(false)
                     }
+
                 })
     }
 

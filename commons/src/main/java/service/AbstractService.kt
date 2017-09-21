@@ -23,74 +23,26 @@ import java.util.*
 
 abstract class AbstractService : AbstractVerticle() {
 
-    val servicesKey = "services"
     abstract val serviceName: String
-
-    val portKey = "port"
     open val defaultPort = 8080
 
-    val jwtPortKey = "jwtPort"
-    protected val defaultJWTPort = 8090
+    val defaultJWTPort = 8090
 
-    val jwtAlgorithmKey = "jwtAlgorithm"
+    val configInitializer by lazy {
+        ServiceConfigInitializer(config(), this)
+    }
 
     val conf: JsonObject by lazy {
-        val res = config()
-
-        // complete if not already complete
-        // keystore
-        val defaultKeystore = JsonObject()
-        val keystore = configInsertIfNotExist(res, KeyStoreManager.keystoreKey, defaultKeystore)
-
-        configInsertIfNotExist(keystore, KeyStoreManager.pathKey, "keystore.jceks")
-        configInsertIfNotExist(keystore, KeyStoreManager.typeKey, "jceks")
-        configInsertIfNotExist(keystore, KeyStoreManager.passwordKey, "secretAsFuq")
-
-        // JWT
-        configInsertIfNotExist(res, jwtAlgorithmKey, "RS256")
-
-        //services
-        val defaultServices = JsonObject()
-        val services = configInsertIfNotExist(res, servicesKey, defaultServices)
-        val defaultService = JsonObject()
-        val service = configInsertIfNotExist(services, serviceName, defaultService)
-
-        configInsertIfNotExist(service, portKey, defaultPort)
-
-        configInsertIfNotExist(services, jwtPortKey, defaultJWTPort)
-
-        println(res.encodePrettily())
-        println()
-        res
-    }
-
-    fun configInsertIfNotExist(config: JsonObject, key: String, value: String): String {
-        if (!config.containsKey(key)) {
-            config.put(key, value)
-            return value
-        }
-        return config.getString(key)
-    }
-
-    fun configInsertIfNotExist(config: JsonObject, key: String, value: JsonObject): JsonObject {
-        if (!config.containsKey(key)) {
-            config.put(key, value)
-            return value
-        }
-        return config.getJsonObject(key)
-    }
-
-    fun configInsertIfNotExist(config: JsonObject, key: String, value: Int): Int {
-        if (!config.containsKey(key)) {
-            config.put(key, value)
-            return value
-        }
-        return config.getInteger(key)
+        configInitializer
+                .initializeKeystore()
+                .initializeJwt()
+                .initializeService()
+                .config
     }
 
 
     val serviceConfig: JsonObject by lazy {
-        conf.getJsonObject(servicesKey).getJsonObject(serviceName)
+        configInitializer.getServiceConfig()
     }
 
     protected val router: Router by lazy {
@@ -107,7 +59,7 @@ abstract class AbstractService : AbstractVerticle() {
     lateinit var authProvider: JWTAuth
 
     val tokenOptions by lazy {
-        JWTOptions().setAlgorithm(conf.getString(jwtAlgorithmKey))
+        JWTOptions().setAlgorithm(conf.getString(ServiceConfigInitializer.jwtAlgorithmKey))
                 .setExpiresInMinutes(60)
     }
 
