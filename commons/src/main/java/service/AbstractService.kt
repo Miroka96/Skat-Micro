@@ -1,9 +1,6 @@
 package service
 
-import io.vertx.core.AbstractVerticle
-import io.vertx.core.AsyncResult
-import io.vertx.core.Future
-import io.vertx.core.Handler
+import io.vertx.core.*
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.User
 import io.vertx.ext.auth.jwt.JWTAuth
@@ -79,47 +76,53 @@ abstract class AbstractService : AbstractVerticle() {
     private fun initialize(future: Future<Unit>) {
         val authProviderFinished = Future.future<Unit>()
         val databaseFinished = Future.future<Unit>()
-        val routingFinished = Future.future<Unit>()
-        val customStartFinished = Future.future<Unit>()
-        val initializationFinished = Future.future<Unit>()
 
-        authProviderFinished.setHandler { res: AsyncResult<Unit> ->
+        val step1Futures = listOf(
+                authProviderFinished,
+                databaseFinished
+        )
+        val preparationFinished = CompositeFuture.all(step1Futures)
+
+
+        val customStartFinished = Future.future<Unit>()
+        val routingFinished = Future.future<Unit>()
+
+        val step2Futures = listOf(
+                customStartFinished,
+                routingFinished
+        )
+        val initializationFinished = CompositeFuture.all(step2Futures)
+
+
+        val webserverFinished = Future.future<Unit>()
+
+
+        preparationFinished.setHandler { res ->
             if (res.succeeded()) {
-                println("Deployed Authentication Provider")
-                checkCreateDatabaseIndex(databaseFinished)
-            } else {
-                future.fail(res.cause())
-            }
-        }
-        databaseFinished.setHandler { res: AsyncResult<Unit> ->
-            if (res.succeeded()) {
-                println("Deployed Database Connection")
+                println("Finished Initialization Step 1")
+                customStart(customStartFinished)
                 initializeRouting(routingFinished)
             } else {
                 future.fail(res.cause())
             }
         }
-        routingFinished.setHandler { res: AsyncResult<Unit> ->
+
+        initializationFinished.setHandler { res ->
             if (res.succeeded()) {
-                println("Deployed Routing Handlers")
-                customStart(customStartFinished)
+                println("Finished Initialization Step 2")
+                initializeWebServer(webserverFinished)
             } else {
                 future.fail(res.cause())
             }
         }
-        customStartFinished.setHandler { res: AsyncResult<Unit> ->
-            if (res.succeeded()) {
-                println("Deployed Custom Service Scripts")
-                initializeWebServer(initializationFinished)
-            } else {
-                future.fail(res.cause())
-            }
-        }
-        initializationFinished.setHandler { res: AsyncResult<Unit> ->
+
+        webserverFinished.setHandler { res ->
+            println("Finished Initialization Step 3")
             future.handle(res)
         }
 
         initializeAuthProvider(authProviderFinished)
+        checkCreateDatabaseIndex(databaseFinished)
     }
 
     protected open val createKeyStorePermission = false
