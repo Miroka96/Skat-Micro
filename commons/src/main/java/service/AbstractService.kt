@@ -1,12 +1,15 @@
 package service
 
 import io.vertx.core.*
+import io.vertx.core.buffer.Buffer
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.auth.User
 import io.vertx.ext.auth.jwt.JWTAuth
 import io.vertx.ext.auth.jwt.JWTOptions
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
+import io.vertx.ext.web.client.HttpResponse
+import io.vertx.ext.web.client.WebClient
 import io.vertx.ext.web.handler.BodyHandler
 import service.database.AbstractQueries
 import service.database.CouchbaseAccess
@@ -23,7 +26,8 @@ abstract class AbstractService : AbstractVerticle() {
     abstract val serviceName: String
     open val defaultPort = 8080
 
-    val defaultJWTPort = 8090
+    val defaultJWTPort = 8081
+    val defaultJWTHost = "localhost"
 
     val configInitializer by lazy {
         ServiceConfigInitializer(config(), this)
@@ -56,7 +60,7 @@ abstract class AbstractService : AbstractVerticle() {
     lateinit var authProvider: JWTAuth
 
     val tokenOptions by lazy {
-        JWTOptions().setAlgorithm(conf.getString(ServiceConfigInitializer.jwtAlgorithmKey))
+        JWTOptions().setAlgorithm(conf.getString(ServiceConfigInitializer.JWT_ALGORITHM))
                 .setExpiresInMinutes(60)
     }
 
@@ -139,7 +143,17 @@ abstract class AbstractService : AbstractVerticle() {
             } catch (keyEx: UnrecoverableKeyException) {
                 future.fail(keyEx)
             } catch (nsfEx: NoSuchFileException) {
-                future.fail(nsfEx)
+                println("Pulling Public Key")
+                val providerFuture = Future.future<JWTAuth>()
+                providerFuture.setHandler { res: AsyncResult<JWTAuth> ->
+                    if (res.succeeded()) {
+                        authProvider = res.result()
+                        future.complete()
+                    } else {
+                        future.fail(res.cause())
+                    }
+                }
+                pullReadOnlyAuthProvider(providerFuture)
             } catch (ex: Exception) {
                 println("Unknown Exception while reading Keystore")
                 future.fail(ex)
@@ -147,6 +161,44 @@ abstract class AbstractService : AbstractVerticle() {
         }, { res: AsyncResult<Unit> ->
             continueFuture.handle(res)
         })
+    }
+
+    private fun pullReadOnlyAuthProvider(future: Future<JWTAuth>) {
+        val keyFuture = Future.future<String>()
+        keyFuture.setHandler { res: AsyncResult<String> ->
+            if (res.succeeded()) {
+                val publicKey = res.result()
+                val jwtConfig = JsonObject()
+                        .put(KeyStoreManager.PUBLIC_KEY, publicKey)
+
+                val authProvider = JWTAuth.create(vertx, jwtConfig)
+                future.complete(authProvider)
+            } else {
+                future.fail(res.cause())
+            }
+        }
+        downloadJWTPublicKey(keyFuture)
+    }
+
+    private fun downloadJWTPublicKey(keyFuture: Future<String>) {
+        val client = WebClient.create(vertx)
+        val request = client.get(
+                conf.getJsonObject(ServiceConfigInitializer.SERVICES)
+                        .getInteger(ServiceConfigInitializer.JWT_PORT),
+                conf.getJsonObject(ServiceConfigInitializer.SERVICES)
+                        .getString(ServiceConfigInitializer.JWT_HOST),
+                RoutingPath.PUBLIC_KEY.toString())
+
+        request.send { result: AsyncResult<HttpResponse<Buffer>> ->
+            if (result.succeeded()) {
+                val response = result.result()
+                val res = JsonObject(response.bodyAsString())
+                val pubKey = res.getString(KeyStoreManager.PUBLIC_KEY)
+                keyFuture.complete(pubKey)
+            } else {
+                keyFuture.fail(result.cause())
+            }
+        }
     }
 
     private fun checkAuthProvider(continueFuture: Future<Unit>) {

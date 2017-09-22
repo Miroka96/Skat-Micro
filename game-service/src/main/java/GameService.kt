@@ -11,7 +11,7 @@ class GameService : AbstractService() {
 
     override val serviceName: String = "game"
 
-    override val defaultPort = 8091
+    override val defaultPort = 8082
 
     override fun addRouting(router: Router) {
         router.get(RoutingPath.JOIN_GAME.toString()).handler(wrapHandler(JoinGameHandler()))

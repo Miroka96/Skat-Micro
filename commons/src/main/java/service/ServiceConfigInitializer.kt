@@ -18,19 +18,20 @@ class ServiceConfigInitializer(val config: JsonObject,
     }
 
     fun initializeJwt(): ServiceConfigInitializer {
-        configInsertIfNotExist(config, jwtAlgorithmKey, "RS256")
+        configInsertIfNotExist(config, JWT_ALGORITHM, "RS256")
         return this
     }
 
     fun initializeService(): ServiceConfigInitializer {
         val defaultServices = JsonObject()
-        val services = configInsertIfNotExist(config, servicesKey, defaultServices)
+        val services = configInsertIfNotExist(config, SERVICES, defaultServices)
         val defaultService = JsonObject()
         val serviceConfig = configInsertIfNotExist(services, service.serviceName, defaultService)
 
-        configInsertIfNotExist(serviceConfig, portKey, service.defaultPort)
+        configInsertIfNotExist(serviceConfig, PORT, service.defaultPort)
 
-        configInsertIfNotExist(services, jwtPortKey, service.defaultJWTPort)
+        configInsertIfNotExist(services, JWT_HOST, service.defaultJWTHost)
+        configInsertIfNotExist(services, JWT_PORT, service.defaultJWTPort)
 
         println(config.encodePrettily())
         println()
@@ -63,14 +64,15 @@ class ServiceConfigInitializer(val config: JsonObject,
 
     fun getServiceConfig(): JsonObject {
         return config
-                .getJsonObject(servicesKey)
+                .getJsonObject(SERVICES)
                 .getJsonObject(service.serviceName)
     }
 
     companion object {
-        val servicesKey = "services"
-        val portKey = "port"
-        val jwtPortKey = "jwtPort"
-        val jwtAlgorithmKey = "jwtAlgorithm"
+        val SERVICES = "services"
+        val PORT = "port"
+        val JWT_HOST = "jwtHost"
+        val JWT_PORT = "jwtPort"
+        val JWT_ALGORITHM = "jwtAlgorithm"
     }
 }
